@@ -1,0 +1,4 @@
+name = "OscillatorPopulation"
+uuid = "fb44ea82-9844-4ac6-9346-0134b9c06618"
+authors = ["Vojtech Kumpost <vkumpost@gmail.com>"]
+version = "0.1.0"
