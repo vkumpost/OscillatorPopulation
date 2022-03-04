@@ -1,5 +1,6 @@
 module OscillatorPopulation
 
-greet() = print("Hello World!")
+export OscillatorPopulationError
+include("exceptions.jl")
 
 end # module

@@ -1,3 +1,6 @@
 using Test
+using OscillatorPopulation
 
-@test true
+@testset "exeptions" begin
+    include("exceptions_test.jl")
+end
