@@ -23,4 +23,7 @@ docs/site/
 # environment.
 Manifest.toml
 
+# Local package preferences
+LocalPreferences.toml
+
 Code.lnk
