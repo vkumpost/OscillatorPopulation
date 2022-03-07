@@ -116,6 +116,48 @@ end
 end
 
 
+@testset "_get_problem_property" begin
+
+    model = create_dummy("ode")
+    u0 = OscillatorPopulation._get_problem_property(model, "u0")
+    p = OscillatorPopulation._get_problem_property(model, "p")
+    tspan = OscillatorPopulation._get_problem_property(model, "tspan")
+    @test u0 == [1.0, 0.0]
+    @test p == [1.0, 2.0, 0.0]
+    @test tspan == (0.0, 4.0)
+
+    model = create_dummy("jump")
+    u0 = OscillatorPopulation._get_problem_property(model, "u0")
+    p = OscillatorPopulation._get_problem_property(model, "p")
+    tspan = OscillatorPopulation._get_problem_property(model, "tspan")
+    @test u0 == [1.0, 0.0]
+    @test p == [1.0, 2.0, 0.0]
+    @test tspan == (0.0, 4.0)
+
+end
+
+@testset "_set_problem_property!" begin
+
+    model = create_dummy("ode")
+    OscillatorPopulation._set_problem_property!(model, u0=[0.0, 0.0], p=[0.0, 0.0, 2.0])
+    @test model.problem.u0 == [0.0, 0.0]
+    @test model.problem.p == [0.0, 0.0, 2.0]
+    @test model.problem.tspan == (0.0, 4.0)
+
+    model = create_dummy("sde")
+    OscillatorPopulation._set_problem_property!(model, p=[0.0, 0.0, 2.0])
+    @test model.problem.u0 == [1.0, 0.0]
+    @test model.problem.p == [0.0, 0.0, 2.0]
+    @test model.problem.tspan == (0.0, 4.0)
+
+    model = create_dummy("jump")
+    OscillatorPopulation._set_problem_property!(model, tspan=(0.0, 12.3), u0=[12.0, -5.0])
+    @test model.problem.prob.u0 == [12.0, -5.0]
+    @test model.problem.prob.p == [1.0, 2.0, 0.0]
+    @test model.problem.prob.tspan == (0.0, 12.3)
+
+end
+
 @testset "simulate_model" begin
 
     model = create_dummy("ode")

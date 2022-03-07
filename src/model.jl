@@ -28,6 +28,84 @@ end
 
 
 """
+`_get_problem_property`
+
+Extract a property of a problem.
+
+**Arguments**
+- `problem`: `ODEProblem`, `SDEProblem`, or 'JumpProblem`.
+- `property_name`: Property name (e.g. `u0`, `p`, `tspan`).
+
+**Returns**
+- `property`: Property of a problem.
+"""
+function _get_problem_property(problem::Union{ODEProblem, SDEProblem, JumpProblem},
+    property_name)
+
+    # Property name must be a symbol
+    property_name = Symbol(property_name)
+
+    # For JumpProblem access problem.prob, otherwise problem directly
+    if problem isa JumpProblem
+        property = getproperty(problem.prob, property_name)
+    else
+        property = getproperty(problem, property_name)
+    end
+
+    # Return the found property
+    return property
+
+end
+
+
+"""
+`_get_problem_property`
+
+Extract a property of a problem that is stored part of a model.
+
+**Arguments**
+- `model`: `Model`.
+- `property_name`: Property name (e.g. `u0`, `p`, `tspan`).
+
+**Returns**
+- `property`: Property of a problem.
+"""
+function _get_problem_property(model::Model, property_name)
+
+    return _get_problem_property(model.problem, property_name)
+
+end
+
+
+"""
+`_set_problem_property!`
+
+Set a propery of a model's problem.
+
+**Arguments**
+- `model`: `Model`.
+
+**Keyword Arguments**
+- `kwargs...`: Name-value pairs of the properties to be set (e.g.
+    `u0=[1.0, 0.0]`, `tspan=(0.0, 10.0)`).
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function _set_problem_property!(model::Model; kwargs...)
+
+    # Remake problem with the new properties
+    new_problem = remake(model.problem; kwargs...)
+
+    # Replace the problem in the model
+    model.problem = new_problem
+    
+    return model
+
+end
+
+
+"""
 `simulate_model`
 
 Simulate a model.
