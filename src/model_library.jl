@@ -83,7 +83,7 @@ function _load_amplitude_phase(problem_type)
 
         # Extend parameters by the noise intensity
         push!(parameter_names, "σ")
-        push!(p, 0.1)
+        push!(p, 0.5)
 
         # Create an SDE problem
         problem = SDEProblem(model!, noise!, u0, tspan, p)
@@ -94,7 +94,7 @@ function _load_amplitude_phase(problem_type)
 
     else
 
-        msg = "Problem type $problem_type not supported! Use `ode` or `sde`."
+        msg = "Problem type `$problem_type` not implemented! Use `ode` or `sde`."
         err = OscillatorPopulationError(msg)
         throw(err)
 
