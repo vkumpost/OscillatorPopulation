@@ -25,3 +25,33 @@ mutable struct Model
     input::Tuple{Matrix{Float64}, String}
     output::Function
 end
+
+
+"""
+`simulate_model`
+
+Simulate a model.
+
+**Arguments**
+- `model`: `Model` struct.
+
+**Returns**
+- `x`: Output vector.
+- `t`: Time vector.
+- `sol`: `DifferentialEqualtions` solution.
+"""
+function simulate_model(model::Model)
+    
+    problem = model.problem
+    solver_algorithm = model.solver_algorithm
+    solver_parameters = model.solver_parameters
+    output = model.output
+
+    sol = solve(problem, solver_algorithm; solver_parameters...)
+
+    t = sol.t
+    x = output(sol)
+
+    return x, t, sol
+
+end
