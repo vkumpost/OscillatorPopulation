@@ -2,6 +2,9 @@ using DifferentialEquations
 using OscillatorPopulation
 using Test
 
+@testset "events" begin
+    include("events_test.jl")
+end
 
 @testset "exceptions" begin
     include("exceptions_test.jl")

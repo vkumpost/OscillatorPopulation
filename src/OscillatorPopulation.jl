@@ -1,7 +1,12 @@
 module OscillatorPopulation
 
-using DifferentialEquations
 
+using DifferentialEquations
+using PyPlot
+
+
+export create_events, create_events_cycle, plot_events
+include("events.jl")
 
 export OscillatorPopulationError
 include("exceptions.jl")
