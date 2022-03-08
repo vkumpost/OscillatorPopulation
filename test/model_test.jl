@@ -234,6 +234,91 @@ end
 
 end
 
+@testset "get_parameter_index" begin
+
+    model = create_dummy("ode")
+    index = get_parameter_index(model, "c")
+    @test index == 3
+
+    # Nonexisting parameter
+    @test_throws OscillatorPopulationError get_parameter_index(model, "d")
+
+end
+
+@testset "get_parameter" begin
+
+    model = create_dummy("ode")
+    value = get_parameter(model, "b")
+    @test value == 2
+
+    model = create_dummy("sde")
+    value = get_parameter(model, "b")
+    @test value == 2
+
+    model = create_dummy("jump")
+    value = get_parameter(model, "b")
+    @test value == 2
+
+    # Nonexisting parameter
+    @test_throws OscillatorPopulationError get_parameter(model, "d")
+
+end
+
+@testset "set_parameter!" begin
+
+    # Change one parameter
+    model = create_dummy("ode")
+    set_parameter!(model, "b", 123)
+    @test model.problem.p[1] == 1  # not changed
+    @test model.problem.p[2] == 123  # changed
+    @test model.problem.p[3] == 0  # not changed
+
+    # Change several parameters to the equal value
+    model = create_dummy("sde")
+    set_parameter!(model, "a=c", 777)
+    @test model.problem.p[1] == 777  # changed
+    @test model.problem.p[2] == 2  # not changed
+    @test model.problem.p[3] == 777  # changed
+
+    model = create_dummy("jump")
+    set_parameter!(model, "c=b", -12)
+    @test model.problem.prob.p[1] == 1  # changed
+    @test model.problem.prob.p[2] == -12  # changed
+    @test model.problem.prob.p[3] == -12  # changed
+
+    # Try to change invalid parameter
+    model = create_dummy("ode")
+    @test_throws OscillatorPopulationError set_parameter!(model, "d", 0)
+
+    # Change a list of parameters
+    model = create_dummy("ode")
+    set_parameter!(model, ["b"], [123])
+    @test model.problem.p[1] == 1  # not changed
+    @test model.problem.p[2] == 123  # changed
+    @test model.problem.p[3] == 0  # not changed
+
+    model = create_dummy("sde")
+    set_parameter!(model, ["a", "c"], [111, 222])
+    @test model.problem.p[1] == 111  # changed
+    @test model.problem.p[2] == 2  # not changed
+    @test model.problem.p[3] == 222  # changed
+
+    model = create_dummy("jump")
+    set_parameter!(model, ["a=c", "b"], [111, 222])
+    @test model.problem.prob.p[1] == 111  # changed
+    @test model.problem.prob.p[2] == 222  # changed
+    @test model.problem.prob.p[3] == 111  # changed
+
+    # Different array lengths for parameter names and values
+    model = create_dummy("ode")
+    @test_throws OscillatorPopulationError set_parameter!(model, ["a", "b"], [1, 2, 3])
+
+    # Try to change invalid parameter in an array
+    model = create_dummy("ode")
+    @test_throws OscillatorPopulationError set_parameter!(model, ["a", "e"], [2, 3])
+
+end
+
 @testset "simulate_model" begin
 
     model = create_dummy("ode")

@@ -15,7 +15,7 @@ export load_model
 include("model_library.jl")
 
 export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
-    simulate_model
+    get_parameter_index, get_parameter, set_parameter!, simulate_model
 include("model.jl")
 
 

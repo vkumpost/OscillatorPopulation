@@ -234,6 +234,126 @@ end
 
 
 """
+`get_parameter_index`
+
+Find index of a parameter.
+
+**Arguments**
+- `model`: Model.
+- `parameter_name`: Name of the parameter.
+
+**Returns**
+- `index`: Index indicating the position of the parameter.
+"""
+function get_parameter_index(model::Model, parameter_name::String)
+
+    parameter_names = model.parameter_names
+    index = findfirst(parameter_names .== parameter_name)
+    if isnothing(index)
+        msg = "Parameter `$(parameter_name)` is not among the model parameters!"
+        err = OscillatorPopulationError(msg)
+        throw(err)
+    end
+    return index
+
+end
+
+
+"""
+`get_parameter_value`
+
+Get a parameter value.
+
+**Arguments**
+- `model`: Model.
+- `parameter_name`: Name of the parameter.
+
+**Returns**
+- `parameter_value`: Value of the parameter.
+"""
+function get_parameter(model::Model, parameter_name::String)
+    
+    index = get_parameter_index(model, parameter_name)
+    parameter_values = _get_problem_property(model, "p")
+    return parameter_values[index]
+
+end
+
+
+"""
+`set_parameter!`
+
+Set a parameter value.
+
+**Arguments**
+- `model`: Model.
+- `name`: Name of the parameter. Can also be in the form of `d1=d2=d3`, which
+    sets all parameters d1, d2, and d3 to the same value.
+- `value`: New value for the parameter.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_parameter!(model::Model, name::String, value::Number)
+
+    # Get array of parameter values
+    parameter_values = _get_problem_property(model, "p")
+
+    if occursin("=", name)
+        # If "=" occurs in `name`, split the string into individual parameters
+        name_array = String.(split(name, "="))
+        for name_split in name_array
+            # Set each parameter to `value`
+            index = get_parameter_index(model, name_split)
+            parameter_values[index] = value
+        end
+    else
+        # Set the desired parameter to `value`
+        index = get_parameter_index(model, name)
+        parameter_values[index] = value
+    end
+
+    # Rebuild the model with the new parameter value
+    _set_problem_property!(model, p=parameter_values)
+    return model
+
+end
+
+
+"""
+`set_parameter!`
+
+Set parameter values.
+
+**Arguments**
+- `model`: Model.
+- `name_array`: Parameter names. Can also be in the form of "d1=d2=d3", which
+    sets all parameters d1, d2, and d3 to the same value.
+- `value_array`: New values for the parameters.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_parameter!(model::Model, name_array::Array, value_array::Array)
+
+    # The input arrays must have the same length
+    if length(name_array) != length(value_array)
+        msg = "The array of the parameter names and values must have the same length!"
+        err = OscillatorPopulationError(msg)
+        throw(err)
+    end
+
+    # Set the parameters
+    for (name, value) in zip(name_array, value_array)
+        set_parameter!(model, name, value)
+    end
+
+    return model
+
+end
+
+
+"""
 `simulate_model`
 
 Simulate a model.
