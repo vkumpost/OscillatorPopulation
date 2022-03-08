@@ -199,6 +199,41 @@ end
 
 end
 
+@testset "set_solver!" begin
+    
+    # Change solver and add a solver parameter
+    model = create_dummy("ode")
+    set_solver!(model, DP5(), saveat=5.0)
+    @test model.solver_algorithm == DP5()  # changed
+    @test model.solver_parameters.dt == 1.0  # not changed
+    @test model.solver_parameters.saveat == 5.0  # added
+
+    # Keep solver and change an existing solver parameter
+    model = create_dummy("ode")
+    set_solver!(model, dt=0.01)
+    @test model.solver_algorithm == Euler()  # not change
+    @test model.solver_parameters.dt == 0.01  # changed
+
+    # Replace solver parameters with new ones
+    model = create_dummy("ode")
+    set_solver!(model, saveat=0.1, merge_kwargs=false)
+    @test model.solver_algorithm == Euler()  # not changed
+    @test model.solver_parameters.saveat == 0.1  # added
+    @test !(:dt in keys(model.solver_parameters))  # removed
+
+    # Check that callback is not removed
+    model = create_dummy("ode")
+    model.solver_parameters = (dt=0.1, callback="test",)
+    set_solver!(model, saveat=0.1, merge_kwargs=false)
+    @test model.solver_parameters.saveat == 0.1  # added
+    @test !(:dt in keys(model.solver_parameters))  # removed
+    @test :callback in keys(model.solver_parameters)  # not removed
+
+    # Throw an exception if the user attempts to pass a callback
+    @test_throws OscillatorPopulationError set_solver!(model, callback="test")
+
+end
+
 @testset "simulate_model" begin
 
     model = create_dummy("ode")

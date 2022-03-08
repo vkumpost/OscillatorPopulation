@@ -14,7 +14,8 @@ include("exceptions.jl")
 export load_model
 include("model_library.jl")
 
-export set_initial_conditions!, set_timespan!, set_output!, simulate_model
+export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
+    simulate_model
 include("model.jl")
 
 

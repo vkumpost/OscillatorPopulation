@@ -167,6 +167,73 @@ end
 
 
 """
+`set_solver!`
+
+Set solver algorithm and its properties.
+
+**Arguments**
+- `model`: Model.
+
+**Optional Arguments**
+- `algorithm`: Solver algorithm (e.g. `Tsit5()` or `SOSRI()`).
+
+**Keyword Arguments**
+- `merge_kwargs`: If `false`, the original arguments are deleted.
+- `kwargs...`: Solver parameters.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_solver!(model::Model, algorithm=nothing; merge_kwargs=true, kwargs...)
+ 
+    # Protect callback for the input function
+    if :callback in keys(kwargs)
+        msg = "Callback is reserved for the input function!"
+        err = OscillatorPopulationError(msg)
+        throw(err)
+    end
+
+    if isnothing(algorithm)
+        # If the algorithm was not specified, use to original one
+        solver_algorithm = model.solver_algorithm
+    else
+        # If the algorithm was specified, use the new one
+        solver_algorithm = algorithm
+    end
+
+    if length(kwargs) > 0
+        # If kwargs were passed, add them to the solver_parameters
+
+        if merge_kwargs
+            # Merge kwargs with the existing parameters
+            solver_parameters = merge(model.solver_parameters, NamedTuple(kwargs))
+        else
+            # Replace the old parameters with the new ones
+            if :callback in keys(model.solver_parameters)
+                # Preserve callback
+                callback = model.solver_parameters[:callback]
+                solver_parameters = merge(NamedTuple(kwargs), (callback=callback,))
+            else
+                solver_parameters = NamedTuple(kwargs)
+            end
+        end
+
+    else
+        # If no kwargs were passed, just copy the original ones
+        solver_parameters = model.solver_parameters
+
+    end
+
+    # Set solver algorithm and parameters
+    model.solver_algorithm = solver_algorithm
+    model.solver_parameters = solver_parameters
+
+    return model
+
+end
+
+
+"""
 `simulate_model`
 
 Simulate a model.
