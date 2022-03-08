@@ -158,6 +158,47 @@ end
 
 end
 
+@testset "set_initial_conditions!" begin
+    
+    model = create_dummy("ode")
+    set_initial_conditions!(model, [3.1, -1.8])
+    @test model.problem.u0 == [3.1, -1.8]
+
+    model = create_dummy("sde")
+    set_initial_conditions!(model, [3.1, -1.8])
+    @test model.problem.u0 == [3.1, -1.8]
+
+    model = create_dummy("jump")
+    set_initial_conditions!(model, [3.1, -1.8])
+    @test model.problem.prob.u0 == [3.1, -1.8]
+
+end
+
+@testset "set_timespan!" begin
+
+    model = create_dummy("ode")
+    set_timespan!(model, (-1.1, 49.2))
+    @test model.problem.tspan == (-1.1, 49.2)
+
+    model = create_dummy("sde")
+    set_timespan!(model, (-1.1, 49.2))
+    @test model.problem.tspan == (-1.1, 49.2)
+
+    model = create_dummy("jump")
+    set_timespan!(model, (-1.1, 49.2))
+    @test model.problem.prob.tspan == (-1.1, 49.2)
+
+end
+
+@testset "set_output!" begin
+
+    model = create_dummy("ode")
+    fun = sol -> sol.t
+    set_output!(model, fun)
+    @test model.output == fun
+
+end
+
 @testset "simulate_model" begin
 
     model = create_dummy("ode")

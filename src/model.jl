@@ -106,6 +106,67 @@ end
 
 
 """
+`set_initial_conditions!`
+
+Set initial conditions for a model.
+
+**Arguments**
+- `model`: `Model`.
+- `u0`: Initial conditions.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_initial_conditions!(model::Model, u0)
+
+    model = _set_problem_property!(model; u0=u0)
+    return model
+
+end
+
+
+"""
+`set_timespan!`
+
+Set timespan for a model.
+
+**Arguments**
+- `model`: `Model`.
+- `tspan`: Timespan.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_timespan!(model::Model, tspan)
+
+    model = _set_problem_property!(model; tspan=tspan)
+    return model
+
+end
+
+
+"""
+`set_output!`
+
+Set output for a model.
+
+**Arguments**
+- `model`: `Model`.
+- `output`: Output function that transforms `DifferentialEqualtions` solution
+    into a matrix: rows are time steps and columns are variables.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_output!(model::Model, output)
+
+    model.output = output
+    return model
+
+end
+
+
+"""
 `simulate_model`
 
 Simulate a model.
