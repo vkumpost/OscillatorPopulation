@@ -175,7 +175,7 @@ Set solver algorithm and its properties.
 - `model`: Model.
 
 **Optional Arguments**
-- `algorithm`: Solver algorithm (e.g. `Tsit5()` or `SOSRI()`).
+- `algorithm`: Solver algorithm (e.g. `DP5()` or `SOSRI()`).
 
 **Keyword Arguments**
 - `merge_kwargs`: If `false`, the original arguments are deleted.
