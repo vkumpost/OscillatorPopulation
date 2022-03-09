@@ -223,7 +223,7 @@ end
 
 
 """
-`create_callback(events::Matrix, i)`
+`create_callback`
 
 Generate `PresetTimeCallback` from `events` modyfing `i`-th parameter.
 
