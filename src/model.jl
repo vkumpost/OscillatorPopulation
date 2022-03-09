@@ -394,6 +394,52 @@ end
 
 
 """
+`print_info`
+
+Print model description in the terminal.
+
+**Arguments**
+- `model`: Model.
+"""
+function print_info(model::Model)
+
+    if model.problem isa ODEProblem
+        println("ODE Model")
+        prob = model.problem
+    elseif model.problem isa SDEProblem
+        println("SDE Model")
+        prob = model.problem
+    elseif model.problem isa JumpProblem
+        println("Jump Model")
+        prob = model.problem.prob
+    end
+
+    println("Solver\n  $(model.solver_algorithm)")
+    println("Solver parameters")
+    for name in keys(model.solver_parameters)
+        if name == :callback
+            parameter = model.input[2]
+            println("  callback acting on $parameter")
+        else
+            value = model.solver_parameters[name]
+            println("  $name = $value")
+        end
+    end
+
+    println("Initial condions")
+    for (index, variable) in enumerate(model.variable_names)
+        println("  $variable = $(prob.u0[index])")
+    end
+
+    println("Parameter values")
+    for (index, parameter) in enumerate(model.parameter_names)
+        println("  $parameter = $(prob.p[index])")
+    end
+
+end
+
+
+"""
 `simulate_model`
 
 Simulate a model.

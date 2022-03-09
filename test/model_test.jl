@@ -355,6 +355,12 @@ end
 
 end
 
+@testset "print_info" begin
+
+    @test print_info isa Function
+
+end
+
 @testset "simulate_model" begin
 
     model = create_dummy("ode")
