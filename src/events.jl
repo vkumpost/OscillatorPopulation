@@ -220,3 +220,112 @@ function plot_events(events; ax=gca(), ylims=[], color="#ffbfbfff", zorder=0)
     return ax
 
 end
+
+
+"""
+`create_callback(events::Matrix, i)`
+
+Generate `PresetTimeCallback` from `events` modyfing `i`-th parameter.
+
+**Arguments**
+- `events`: Events matrix.
+- `i`: Index of the parameter to be modified by the callback.
+
+**Keyword Arguments**
+- `callback_type`: "continuous" or "discrete".
+"""
+function create_callback(events::Matrix, i; callback_type="continuous")
+
+    p = NaN  # holds the original value of the parameter
+
+    # Initialization at the beginning of the integration
+    initialize = function (c, u, t, integrator)
+
+        # Protect the original parameters from overwriting
+        integrator.p = copy(integrator.p)
+
+        # Save the default parameter
+        p = integrator.p[i]
+
+        # Set the parameter to 0
+        integrator.p[i] = 0.0
+
+    end
+
+    if callback_type == "continuous"
+    
+        # Set the parameter to its default value at the beginning of the event
+        tstops_on = events[:, 1]
+        affect_on! = (integrator) -> integrator.p[i] = p
+        callback_on = PresetTimeCallback(tstops_on, affect_on!,
+            save_positions=(false, false), initialize=initialize)
+
+        # Set the parameter to zero at the end of the event
+        tstops_off = events[:, 2]
+        affect_off! = (integrator) -> integrator.p[i] = 0.0
+        callback_off = PresetTimeCallback(tstops_off, affect_off!,
+            save_positions=(false, false))
+
+        # Join the on and off callbacks
+        callback = CallbackSet(callback_on, callback_off)
+    
+    elseif callback_type == "discrete"
+
+        # Convert the events to a function
+        fun = events_to_function(events)
+
+        # Call the function at every step of the integration
+        affect! = (integrator) -> integrator.p[i] = fun(integrator.t)*p
+        condition = (u, t, integrator) -> true
+        callback = DiscreteCallback(condition, affect!; initialize=initialize,
+            save_positions=(false, false))
+
+    else
+
+        msg = "Unknown callback type `$callback_type`! Possible options are
+            `continuous` and `discrete`."
+        err = OscillatorPopulationError(msg)
+        throw(err)
+
+    end
+
+    return callback
+
+end
+
+
+# """
+# `_create_discrete_callback(events::Matrix, i)`
+
+# Generate `DiscreteCallback` from `events` modyfing `i`-th parameter.
+# """
+# function _create_discrete_callback(events::Matrix, i)
+
+#     p = NaN  # holds the original value of the parameter
+
+#     # Initialization at the beginning of the integration
+#     initialize = function (c, u, t, integrator)
+
+#         # Protect the original parameters from overwriting
+#         integrator.p = copy(integrator.p) 
+
+#         # Save the default parameter
+#         p = integrator.p[i]
+
+#         # Set the parameter to 0
+#         integrator.p[i] = 0.0
+
+#     end
+
+#     # Convert the events to a function
+#     fun = _events_to_function(events)
+
+#     # Call the function at every step of the integration
+#     affect! = (integrator) -> integrator.p[i] = fun(integrator.t)*p
+#     condition = (u, t, integrator) -> true
+#     callback = DiscreteCallback(condition, affect!; initialize=initialize,
+#         save_positions=(false, false))
+
+#     return callback
+
+# end

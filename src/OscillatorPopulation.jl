@@ -5,7 +5,8 @@ using DifferentialEquations
 using PyPlot
 
 
-export create_events, create_events_cycle, events_to_function, plot_events
+export create_events, create_events_cycle, events_to_function, plot_events,
+    create_callback
 include("events.jl")
 
 export OscillatorPopulationError

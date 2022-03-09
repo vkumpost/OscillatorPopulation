@@ -100,3 +100,154 @@ end
     @test plot_events isa Function
 
 end
+
+@testset "create_callback" begin
+    
+    # =========================================================================
+    # Continuous callback
+
+    # Create a saving callback to check that the parameter is being modified
+    saved_values = SavedValues(Float64, Tuple{Float64,Float64})
+    saving_callback = SavingCallback(
+        (u, t, integrator) -> (integrator.p[1], integrator.p[2]),
+        saved_values,
+        saveat=0:0.1:10
+    )  
+    f = (u, p, t) -> 1.01*u
+    u0 = 1/2
+    tspan = (0.0, 10.0)
+    p = [3, 2]
+    prob = ODEProblem(f, u0, tspan, p)
+
+    events = [2 4; 6.5 8.3]
+    events_callback = create_callback(events, 1; callback_type="continuous")
+    @test events_callback isa CallbackSet
+    callback = CallbackSet(saving_callback, events_callback)
+    sol = solve(prob, DP5(), saveat=0.1, callback=callback)
+
+    # First parameter is modified
+    p1 = [x[1] for x in saved_values.saveval]
+
+    indices = (0 .< saved_values.t .< 2) .|| (4 .< saved_values.t .< 6.5) .||
+        (8.3 .< saved_values.t .< 10.0)
+    @test all(p1[indices] .== 0)
+
+    indices = (2 .< saved_values.t .< 4) .|| (6.5 .< saved_values.t .< 8.3)
+    @test all(p1[indices] .== 3)
+
+    # Second parameter is not modified
+    p2 = [x[2] for x in saved_values.saveval]
+    @test all(p2 .== 2)
+
+    # =========================================================================
+    # Continuous callback - events at the tspan limits
+
+    # Create a saving callback to check that the parameter is being modified
+    saved_values = SavedValues(Float64, Tuple{Float64,Float64})
+    saving_callback = SavingCallback(
+        (u, t, integrator) -> (integrator.p[1], integrator.p[2]),
+        saved_values,
+        saveat=0:0.1:10
+    )       
+    f = (u, p, t) -> 1.01*u
+    u0 = 1/2
+    tspan = (0.0, 10.0)
+    p = [3, 2]
+    prob = ODEProblem(f, u0, tspan, p)
+
+    events = [0 4; 6.5 10.0]
+    events_callback = create_callback(events, 1; callback_type="continuous")
+    @test events_callback isa CallbackSet
+    callback = CallbackSet(saving_callback, events_callback)
+    sol = solve(prob, DP5(), saveat=0.1, callback=callback)
+
+    # First parameter is modified
+    p1 = [x[1] for x in saved_values.saveval]
+
+    indices = (4 .< saved_values.t .< 6.5)
+    @test all(p1[indices] .== 0)
+
+    indices = (0 .< saved_values.t .< 4) .|| (6.5 .< saved_values.t .< 10.0)
+    @test all(p1[indices] .== 3)
+
+    # Second parameter is not modified
+    p2 = [x[2] for x in saved_values.saveval]
+    @test all(p2 .== 2)
+
+    # =========================================================================
+    # Continuous callback - empty events
+
+    # Create a saving callback to check that the parameter is being modified
+    saved_values = SavedValues(Float64, Tuple{Float64,Float64})
+    saving_callback = SavingCallback(
+        (u, t, integrator) -> (integrator.p[1], integrator.p[2]),
+        saved_values,
+        saveat=0:0.1:10
+    )       
+    f = (u, p, t) -> 1.01*u
+    u0 = 1/2
+    tspan = (0.0, 10.0)
+    p = [3, 2]
+    prob = ODEProblem(f, u0, tspan, p)
+
+    events = Matrix{Float64}(undef, 0, 2)
+    events_callback = create_callback(events, 1; callback_type="continuous")
+    @test events_callback isa CallbackSet
+    callback = CallbackSet(saving_callback, events_callback)
+    sol = solve(prob, DP5(), saveat=0.1, callback=callback)
+
+    # First parameter is modified
+    p1 = [x[1] for x in saved_values.saveval]
+
+    indices = (0 .< saved_values.t .< 10)
+    @test all(p1[indices] .== 0)
+
+    # Second parameter is not modified
+    p2 = [x[2] for x in saved_values.saveval]
+    @test all(p2 .== 2)
+
+    # =========================================================================
+    # Discrete callback
+
+    # Create a saving callback to check that the parameter is being modified
+    saved_values = SavedValues(Float64, Tuple{Float64,Float64})
+    saving_callback = SavingCallback(
+        (u, t, integrator) -> (integrator.p[1], integrator.p[2]),
+        saved_values,
+        saveat=0:0.1:10
+    )       
+    f = (u, p, t) -> 1.01*u
+    u0 = 1/2
+    tspan = (0.0, 10.0)
+    p = [3, 2]
+    prob = ODEProblem(f, u0, tspan, p)
+
+    events = [2 4; 6.5 8.3]
+    events_callback = create_callback(events, 2; callback_type="discrete")
+    @test events_callback isa DiscreteCallback
+    callback = CallbackSet(saving_callback, events_callback)
+    sol = solve(prob, Euler(), dt=0.1, callback=callback)
+
+    # First parameter is not modified
+    p1 = [x[1] for x in saved_values.saveval]
+    @test all(p1 .== 3)
+
+    # First parameter is modified
+    p2 = [x[2] for x in saved_values.saveval]
+
+    indices = (0 .< saved_values.t .< 2) .|| (4 .< saved_values.t .< 6.5) .||
+        (8.3 .< saved_values.t .< 10.0)
+    @test all(p2[indices] .== 0)
+    
+    indices = (2 .< saved_values.t .< 4) .|| (6.5 .< saved_values.t .< 8.3)
+    @test all(p2[indices] .== 2)
+
+    # =========================================================================
+    # Unknown callback type
+    
+    events = [1 2]
+    i = 1
+    @test_throws OscillatorPopulationError create_callback(events, i;
+        callback_type="discrete_02")
+
+end
