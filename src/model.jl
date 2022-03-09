@@ -354,6 +354,46 @@ end
 
 
 """
+`set_input!`
+
+Set input to the model.
+
+**Arguments**
+- `model`: Model.
+- `events`: Matrix representing the input square function.
+
+**Optional Arguments**
+- `parameter_name`: Parameter that is being modified by the input.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_input!(model::Model, events::Matrix, parameter_name="I")
+
+    parameter_index = get_parameter_index(model, parameter_name)
+
+    # Create a callback
+    if model.problem isa Union{ODEProblem, SDEProblem}
+        # Use continuous callback for ODE and SDE models
+        callback = create_callback(events, parameter_index; callback_type="continuous")
+    elseif model.problem isa JumpProblem
+        # Use discrete callback for Jump models
+        callback = create_callback(events, parameter_index, callback_type="discrete")
+    end
+
+    # Merge callback with existing solver parameters
+    solver_parameters = merge(model.solver_parameters, (callback=callback,))
+
+    # Rebuild the model
+    model.solver_parameters = solver_parameters
+    model.input = (events, parameter_name)
+
+    return model
+
+end
+
+
+"""
 `simulate_model`
 
 Simulate a model.

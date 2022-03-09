@@ -319,6 +319,42 @@ end
 
 end
 
+@testset "set_input!" begin
+
+    model = create_dummy("ode")
+    events = [2 5]
+    set_input!(model, events, "b")
+
+    # Check that the input field was updated
+    @test model.input[1] == events
+    @test model.input[2] == "b"
+
+    # Check that a callback appeared in the solver parameters
+    @test :callback in keys(model.solver_parameters)
+    @test model.solver_parameters.callback isa CallbackSet
+
+    # The original parameters are unchanged
+    @test :dt in keys(model.solver_parameters)
+    @test model.solver_parameters.dt == 1.0
+
+    # Test that the callback can be rewritten
+    callback_old = model.solver_parameters.callback
+    @test callback_old == model.solver_parameters.callback  # not changed yet
+    set_input!(model, events, "a")
+    @test callback_old != model.solver_parameters.callback  # changed
+
+    # For SDE a continuous callback is created
+    model = create_dummy("sde")
+    set_input!(model, events, "b")
+    @test model.solver_parameters.callback isa CallbackSet
+
+    # For a jump model a discrete callback is created
+    model = create_dummy("jump")
+    set_input!(model, events, "b")
+    @test model.solver_parameters.callback isa DiscreteCallback
+
+end
+
 @testset "simulate_model" begin
 
     model = create_dummy("ode")
