@@ -64,6 +64,36 @@ end
 
 end
 
+@testset "events_to_function" begin
+    
+    # Convert events to a function
+    events = [0 1.5; 3 4.5]
+    fun = events_to_function(events)
+
+    # Events starts will evaluate to 1
+    @test fun(0) == 1
+    @test fun(3) == 1
+
+    # Events ends will evaluate to 0
+    @test fun(1.5) == 0
+    @test fun(4.5) == 0
+
+    # Times inside of events will evaluate to 1
+    @test fun(1) == 1
+    @test fun(3.01) == 1
+
+    # Times outside of events will evaluate to 0
+    @test fun(-1) == 0
+    @test fun(2) == 0
+    @test fun(4.6) == 0
+
+    # Empty events will always evaluate to 0
+    events = Matrix{Float64}(undef, 0, 2)
+    fun = events_to_function(events)
+    @test fun.([-1, 0, 1.5, 3.01, 4.6]) == [0, 0, 0, 0, 0]
+
+end
+
 @testset "plot_events" begin
     
     # Check that the function is exported

@@ -141,6 +141,31 @@ end
 
 
 """
+`events_to_function(events::Matrix)`
+
+Convert an events matrix to a function.
+
+**Arguments**
+- `events`: Events matrix.
+
+**Returns**
+- `fun`: A function that return 1 for light periods and 0 for dark periods.
+"""
+function events_to_function(events::Matrix)
+    N = size(events, 1)
+    function fun(t)
+        for i = 1:N
+            if events[i, 1] <= t < events[i, 2]
+                return 1.0
+            end
+        end
+        return 0.0
+    end
+    return fun
+end
+
+
+"""
 `plot_events`
 
 Plot events.
