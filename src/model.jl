@@ -368,7 +368,7 @@ Simulate a model.
 """
 function simulate_model(model::Model)
     
-    problem = model.problem
+    problem = deepcopy(model.problem)
     solver_algorithm = model.solver_algorithm
     solver_parameters = model.solver_parameters
     output = model.output
