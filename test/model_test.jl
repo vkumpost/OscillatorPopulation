@@ -58,6 +58,7 @@ end
 
 @testset "set_timespan!" begin
 
+    # Set timespan
     model = create_dummy("ode")
     set_timespan!(model, (-1.1, 49.2))
     @test model.problem.tspan == (-1.1, 49.2)
@@ -69,6 +70,19 @@ end
     model = create_dummy("jump")
     set_timespan!(model, (-1.1, 49.2))
     @test model.problem.prob.tspan == (-1.1, 49.2)
+
+    # Set maximal time
+    model = create_dummy("ode")
+    set_timespan!(model, 49.2)
+    @test model.problem.tspan == (0.0, 49.2)
+
+    model = create_dummy("sde")
+    set_timespan!(model, 12.2)
+    @test model.problem.tspan == (0.0, 12.2)
+
+    model = create_dummy("jump")
+    set_timespan!(model, 8.0)
+    @test model.problem.prob.tspan == (0.0, 8.0)
 
 end
 

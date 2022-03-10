@@ -137,9 +137,29 @@ Set timespan for a model.
 **Returns**
 - `model`: In-place edited model.
 """
-function set_timespan!(model::Model, tspan)
+function set_timespan!(model::Model, tspan::Tuple)
 
     model = _set_problem_property!(model; tspan=tspan)
+    return model
+
+end
+
+
+"""
+`set_timespan!`
+
+Set timespan from 0 to some a certain time.
+
+**Arguments**
+- `model`: `Model`.
+- `max_time`: Maximal time of integration.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_timespan!(model::Model, max_time::Number)
+
+    model = set_timespan!(model, (0.0, max_time))
     return model
 
 end
