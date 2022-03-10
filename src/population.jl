@@ -170,3 +170,99 @@ function plot_solution(solution::PopulationSolution, variable=1; n=3, ax=gca())
     return ax
 
 end
+
+
+"""
+`select_time`
+
+Select a specific time from a solution.
+
+**Arguments**
+- `solution`: `PopulationSolution`.
+
+**Keyword Arguments**
+- `remove_offset`: If `true`, the first time point is set to 0.
+- `offset`: Set offset (the first time point).
+- `min_time`: Minimal time (inclusive).
+- `max_time`: Minimal time (exclusive).
+
+**Returns**
+- `PopulationSolution`
+"""
+function select_time(solution::PopulationSolution; remove_offset=true, kwargs...)
+
+    solution = deepcopy(solution)
+
+    t = solution.time
+    m = solution.mean
+    U = solution.trajectories
+    events = solution.events
+    success = solution.success
+
+    if (:min_time in keys(kwargs))
+        
+        # Remove samples before `min_time`
+        min_time = kwargs[:min_time]
+        indices = t .>= min_time
+        t = t[indices]
+        m = m[indices, :]
+        if !isempty(U)
+            U = U[indices, :, :]
+        end
+
+        # Remove events before `min_time`
+        new_events = Matrix{Float64}(undef, 0, 2)
+        for i = 1:size(events, 1)
+            if events[i, 2] >= min_time
+                if events[i, 1] >= min_time
+                    new_events = vcat(new_events, events[i, :]')
+                elseif min_time != events[i, 2]
+                    new_events = vcat(new_events, [min_time events[i, 2]])
+                end
+            end 
+        end
+        events = new_events
+
+    end
+
+    if (:max_time in keys(kwargs))
+
+        # Remove samples after `max_time`
+        max_time = kwargs[:max_time]
+        indices = t .< max_time
+        t = t[indices]
+        m = m[indices, :]
+        if !isempty(U)
+            U = U[indices, :, :]
+        end
+
+        # Remove events after `max_time`
+        newevents = Matrix{Float64}(undef, 0, 2)
+        for i = 1:size(events, 1)
+            if events[i, 1] < max_time
+                if events[i, 2] < max_time
+                    newevents = vcat(newevents, events[i, :]')
+                elseif events[i, 1] != max_time
+                    newevents = vcat(newevents, [events[i, 1] max_time])
+                end
+            end 
+        end
+        events = newevents
+    end
+
+    if remove_offset
+        # Set first timepoint to zero
+        events .-= t[1]
+        t .-= t[1]
+    end
+
+    if :offset in keys(kwargs)
+        # Set first timepoint to offset
+        offset = kwargs[:offset]
+        events .+= offset .- t[1]
+        t .+= offset .- t[1]
+    end
+
+    return PopulationSolution(t, m, U, events, success)
+
+end
