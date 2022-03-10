@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 
 [extras]
