@@ -2,6 +2,10 @@ using DifferentialEquations
 using OscillatorPopulation
 using Test
 
+@testset "dummy_model" begin
+    include("dummy_model.jl")
+end
+
 @testset "events" begin
     include("events_test.jl")
 end
@@ -16,4 +20,8 @@ end
 
 @testset "model" begin
     include("model_test.jl")
+end
+
+@testset "population" begin
+    include("population_test.jl")
 end
