@@ -23,3 +23,9 @@
     @test solution.success
 
 end
+
+@testset "plot_solution" begin
+
+    @test plot_solution isa Function
+
+end

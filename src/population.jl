@@ -21,8 +21,7 @@ end
 
 
 """
-`simulate_population(model::Model, trajectories=1; save_trajectories=true,
-    show_progress=false)`
+`simulate_population`
 
 Simulate a population.
 
@@ -35,6 +34,9 @@ Simulate a population.
 **Keyword Arguments**
 - `save_trajectories`: If `false`, only mean is saved.
 - `show_progress`: If `true`, show a progress bar in the terminal.
+
+**Returns**
+- `solution`: PopulationSolution.
 """
 function simulate_population(model::Model, trajectories=1;
     save_trajectories=true, show_progress=false)
@@ -121,5 +123,50 @@ function simulate_population(model::Model, trajectories=1;
     solution = PopulationSolution(t, m, U, events, success)
 
     return solution
+
+end
+
+
+"""
+`plot_solution`
+
+Plot a solution.
+
+**Arguments**
+- `solution`: PopulationSolution.
+
+**Optional Arguments**
+- `variable`: Index of the variable to be plotted.
+
+**Keyword Arguments**
+- `n`: Number of trajectories to plot in the background.
+- `ax`: PyPlot axes.
+
+**Returns**
+- `ax`: PyPlot axes.
+"""
+function plot_solution(solution::PopulationSolution, variable=1; n=3, ax=gca())
+
+    t = solution.time
+    m = solution.mean
+    U = solution.trajectories
+    n_trajectories = size(U, 3)
+
+    if !isempty(U)
+        for i = 1:min(n, n_trajectories)
+            x = U[:, variable, i]
+            ax.plot(t, x, color="gray", alpha=0.5)
+        end
+    end
+
+    x = m[:, variable]
+    ax.plot(t, x, color="black")
+
+    plot_events(solution.events, ax=ax)
+
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Variable $(variable)")
+
+    return ax
 
 end

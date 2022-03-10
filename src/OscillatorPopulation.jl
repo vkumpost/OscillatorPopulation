@@ -20,7 +20,7 @@ export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
     simulate_model
 include("model.jl")
 
-export simulate_population
+export simulate_population, plot_solution
 include("population.jl")
 
 end  # module
