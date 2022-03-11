@@ -25,3 +25,7 @@ end
 @testset "population" begin
     include("population_test.jl")
 end
+
+@testset "scan" begin
+    include("scan_test.jl")
+end

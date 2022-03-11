@@ -23,4 +23,6 @@ include("model.jl")
 export simulate_population, plot_solution, select_time
 include("population.jl")
 
+include("scan.jl")
+
 end  # module
