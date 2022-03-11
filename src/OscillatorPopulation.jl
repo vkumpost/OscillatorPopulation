@@ -1,5 +1,6 @@
 module OscillatorPopulation
 
+using DataFrames
 using DifferentialEquations
 using PyPlot
 
@@ -23,6 +24,7 @@ include("model.jl")
 export simulate_population, plot_solution, select_time
 include("population.jl")
 
+export scan
 include("scan.jl")
 
 end  # module
