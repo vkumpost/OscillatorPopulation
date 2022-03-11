@@ -13,7 +13,7 @@ Find all possible combinations among the vectors of values.
 **Example**
 ```
 julia> vectors = [[1, 2], [3, 4, 5], [6]];
-julia> combinations = find_all_combinations(vectors);
+julia> combinations = _find_all_combinations(vectors);
 julia> print(combinations);
 [1 3 6; 1 4 6; 1 5 6; 2 3 6; 2 4 6; 2 5 6]
 ```
