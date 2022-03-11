@@ -32,6 +32,9 @@ Simulate a population.
 - `trajectories`: Number of trajectories to simulate.
 
 **Keyword Arguments**
+- `initial_conditions`: Matrix. Columns are variables and rows are \
+
+- `parameters`: Tuple of parameter names (vector) and parameter values (matrix).
 - `save_trajectories`: If `false`, only mean is saved.
 - `show_progress`: If `true`, show a progress bar in the terminal.
 
@@ -39,6 +42,7 @@ Simulate a population.
 - `solution`: PopulationSolution.
 """
 function simulate_population(model::Model, trajectories=1;
+    initial_conditions=nothing, parameters=nothing,
     save_trajectories=true, show_progress=false)
 
     # Prepare variables for PopulationSolution fields
@@ -59,6 +63,19 @@ function simulate_population(model::Model, trajectories=1;
 
         # Make a copy of the model
         model2 = deepcopy(model)
+
+        # Set initial conditions (if passed)
+        if !isnothing(initial_conditions)
+            u0 = initial_conditions[i, :]
+            set_initial_conditions!(model2, u0)
+        end
+
+        # Set parameters (if passed)
+        if !isnothing(parameters)
+            name = parameters[1]
+            value = parameters[2][i, :]
+            set_parameter!(model2, name, value)
+        end
 
         # Solve the problem
         sol_x, sol_t, sol = simulate_model(model2)

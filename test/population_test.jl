@@ -22,6 +22,38 @@
     @test isempty(solution.events)
     @test solution.success
 
+    # Change initial conditions
+    initial_conditions = [3.0 4.0; 8.0 1.0]
+    t_expected = [0.0, 1.0, 2.0, 3.0, 4.0]
+    x1_expected = [3.0 4.0; 4.0 6.0; 5.0 8.0; 6.0 10.0; 7.0 12.0]
+    x2_expected = [8.0 1.0; 9.0 3.0; 10.0 5.0; 11.0 7.0; 12.0 9.0]
+    x_expected = [5.5 2.5; 6.5 4.5; 7.5 6.5; 8.5 8.5; 9.5 10.5]
+
+    model = create_dummy("ode")
+    solution = simulate_population(model, 2; initial_conditions=initial_conditions)
+    @test solution.time == t_expected
+    @test solution.mean == x_expected
+    @test solution.trajectories[:, :, 1] == x1_expected
+    @test solution.trajectories[:, :, 2] == x2_expected
+    @test isempty(solution.events)
+    @test solution.success
+
+    # Change parameters
+    parameters = (["a", "b"], [0.0 1.0; 2.0 3.0])
+    t_expected = [0.0, 1.0, 2.0, 3.0, 4.0]
+    x1_expected = [1.0 0.0; 1.0 1.0; 1.0 2.0; 1.0 3.0; 1.0 4.0]
+    x2_expected = [1.0 0.0; 3.0 3.0; 5.0 6.0; 7.0 9.0; 9.0 12.0]
+    x_expected = [1.0 0.0; 2.0 2.0; 3.0 4.0; 4.0 6.0; 5.0 8.0]
+
+    model = create_dummy("ode")
+    solution = simulate_population(model, 2; parameters=parameters)
+    @test solution.time == t_expected
+    @test solution.mean == x_expected
+    @test solution.trajectories[:, :, 1] == x1_expected
+    @test solution.trajectories[:, :, 2] == x2_expected
+    @test isempty(solution.events)
+    @test solution.success
+
 end
 
 @testset "plot_solution" begin

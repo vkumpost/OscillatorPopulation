@@ -57,7 +57,7 @@ Scan parameters of a model.
 
 **Arguments**
 - `model`: Model.
-- `parameters`: A vector of pairs
+- `parameters`: A vector of pairs. Pairs indicate parameter names and values.
 - `simulation_function`: A function that takes in `PopulationSolution`, and returns
     some descriptive parameters. If the function is called without any arguments,
     it returns the names of the parameters as a vector of strings. For example:
