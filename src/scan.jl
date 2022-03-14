@@ -73,7 +73,7 @@ Scan parameters of a model.
 
 **Returns**
 - `df`: Dataframe with results. First columns correspond to the input parameters
-    followed by columns obtained by `summary_function` for the corresponding
+    followed by columns returned by `simulation_function` for the corresponding
     parameters.
 """
 function scan(model::Model, parameters::Vector, simulation_function::Function;
@@ -131,7 +131,6 @@ function scan(model::Model, parameters::Vector, simulation_function::Function;
 end
 
 
-
 """
 `scan_arnold`
 
@@ -155,6 +154,12 @@ Estimate arnold tongue and/or onion.
 - `input_photoperiods`: Input photoperiods to scan.
 - `input_parameter_name`: Name of the parameter that controls the input amplitude.
 - `show_progress`: If true, show progress in the terminal.
+
+**Returns**
+- `df`: Dataframe with results. First columns correspond to the input amplitude,
+    period, and photoperiod. The following columns correspond to the values
+    returned by `simulation_function` for the corresponding
+    parameters.
 """
 function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
     input_periods=[1.0], input_photoperiods=[0.5], input_parameter="I",
