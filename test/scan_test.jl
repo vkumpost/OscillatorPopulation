@@ -44,3 +44,39 @@ end
     @test df[:, 5] == [ 2,  2,  2,  2,  2,  2]
 
 end
+
+@testset "scan_arnold" begin
+    
+    model = create_dummy("ode")
+    model.problem = remake(model.problem, tspan=(0.0, 20.0))
+    simulation_function = function (model=nothing)
+        if isnothing(model)
+            return ["2nd_event_end", "input_parameter", "input_value"]
+        else
+            second_events_end = model.input[1][2, 2]
+            input_parameter = Float64(model.input[2][1])  # Int('c') == 99
+            input_value = model.problem.p[3]
+            return [second_events_end, input_parameter, input_value]
+        end
+    end
+    input_amplitudes = [0.5, 1.0, 1.5]
+    input_periods = [5.0]
+    input_photoperiods = [0.2, 0.5]
+    input_parameter = "c"
+    df = scan_arnold(model, simulation_function;
+        input_amplitudes=input_amplitudes,
+        input_periods=input_periods,
+        input_photoperiods=input_photoperiods,
+        input_parameter=input_parameter)
+
+    names = OscillatorPopulation.DataFrames.names(df)
+    @test names == ["input_amplitude", "input_period", "input_photoperiod",
+        "2nd_event_end", "input_parameter", "input_value"]
+    @test df[:, 1] == [0.5, 0.5, 1.0, 1.0, 1.5, 1.5]
+    @test df[:, 2] == [5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
+    @test df[:, 3] == [0.2, 0.5, 0.2, 0.5, 0.2, 0.5]
+    @test df[:, 4] == [6.0, 7.5, 6.0, 7.5, 6.0, 7.5]
+    @test df[:, 5] == [ 99,  99,  99,  99,  99,  99]  # Int('c') == 99
+    @test df[:, 6] == [0.5, 0.5, 1.0, 1.0, 1.5, 1.5]
+
+end

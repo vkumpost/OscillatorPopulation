@@ -129,3 +129,92 @@ function scan(model::Model, parameters::Vector, simulation_function::Function;
     return df
 
 end
+
+
+
+"""
+`scan_arnold`
+
+Estimate arnold tongue and/or onion.
+
+**Arguments**
+- `model`: Model.
+- `simulation_function`: A function that takes in `PopulationSolution`, and returns
+    some descriptive parameters. If the function is called without any arguments,
+    it returns the names of the parameters as a vector of strings. For example:
+    ```
+    julia> simulation_function(solution)
+    [1.1, 2.2, 3.3]
+    julia> simulation_function()
+    ["Period", "Amplitude", "Phase"]
+    ```
+
+**Keyword Arguments**
+- `input_amplitudes`: Input amplitudes to scan.
+- `input_periods`: Input periods to scan.
+- `input_photoperiods`: Input photoperiods to scan.
+- `input_parameter_name`: Name of the parameter that controls the input amplitude.
+- `show_progress`: If true, show progress in the terminal.
+"""
+function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
+    input_periods=[1.0], input_photoperiods=[0.5], input_parameter="I",
+    show_progress=false)
+
+    # Find all possible combinations of input amplitudes, periods and photoperiods
+    vectors = [input_amplitudes, input_periods, input_photoperiods]
+    input_value_combinations = _find_all_combinations(vectors)
+    n = size(input_value_combinations, 1)
+    
+    # Initialize summary matrix
+    scan_header = simulation_function()
+    scan_results = fill(NaN, n, length(scan_header))
+
+    # Initialize progress bar
+    if show_progress
+        progressmeter = ProgressMeter.Progress(n; barlen=20)
+    end
+
+    # Iterate all parameter value combinations
+    lk = ReentrantLock()
+    for i = 1:n  # Threads.@threads 
+
+        # Protect the original model from overwriting
+        model2 = deepcopy(model)
+
+        # Extract input amplitude, period, and photoperiod
+        input_amplitude = input_value_combinations[i, 1]
+        input_period = input_value_combinations[i, 2]
+        input_photoperiod = input_value_combinations[i, 3]
+
+        # Generate input
+        end_time = model.problem.tspan[2]
+        events = create_events_cycle(end_time, input_period, input_photoperiod)
+        set_input!(model2, events, input_parameter)
+        set_parameter!(model2, input_parameter, input_amplitude)
+
+        # Calculate parameters of the solution
+        try
+            scan_results[i, :] = simulation_function(model2)
+        catch err
+            @warn "An error occured for [$input_amplitude, $input_period, $input_photoperiod]"
+            throw(err)
+        end
+
+        # Update progress bar
+        if show_progress
+            lock(lk) do
+                ProgressMeter.next!(progressmeter)
+            end
+        end
+
+    end
+
+    # Build the output dataframe
+    matrix = hcat(input_value_combinations, scan_results)
+    input_header = ["input_amplitude", "input_period", "input_photoperiod"]
+    names = vcat(input_header, scan_header)
+    df = DataFrame(matrix, names)
+
+    return df
+
+end
