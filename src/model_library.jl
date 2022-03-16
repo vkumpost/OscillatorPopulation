@@ -90,7 +90,7 @@ function _load_amplitude_phase(problem_type)
                 
         # Set solver parameters
         solver_algorithm = SOSRI()
-        solver_parameters = (saveat=0.01,)
+        solver_parameters = (saveat=0.01, seed=47,)
 
     else
 
