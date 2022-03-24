@@ -31,7 +31,7 @@ end
     @test model.problem.tspan == (0.0, 10.0)
     @test model.problem.p == [0.5, 2.0, 1.0, 0.0, 0.5]
     @test model.solver_algorithm == SOSRI()
-    @test model.solver_parameters == (saveat=0.01, seed=47,)
+    @test model.solver_parameters == (saveat=0.01,)
     @test isempty(model.input[1])
     @test model.input[1] isa Matrix
     @test isempty(model.input[2])
