@@ -7,22 +7,22 @@ Load a model from the library.
 - `model_name`: Name of a model. Currently implemented models are:
     - `amplitude-phase`
     - `goodwin`
-    - `goodwin-2`
+    - `goodwin-general` (kwargs: `n_equations`)
     - `van-der-pol`
 
 **Optional Arguments**
 - `problem_type`: "ode", "sde", or "jump".
 """
-function load_model(model_name::String, problem_type::String="ode")
+function load_model(model_name::String, problem_type::String="ode"; kwargs...)
 
     if model_name == "amplitude-phase"
         model = _load_amplitude_phase(problem_type)
     elseif model_name == "goodwin"
         model = _load_goodwin(problem_type)
-    elseif model_name == "goodwin-2"
-        model = _load_goodwin_2(problem_type)
-    # elseif model_name == "van-der-pol"
-        # model = _load_van_der_pol(problem_type)
+    elseif model_name == "goodwin-general"
+        model = _load_goodwin_general(problem_type; kwargs...)
+    elseif model_name == "van-der-pol"
+        model = _load_van_der_pol(problem_type)
     else
         err = OscillatorPopulationError("`$model_name` is not in the model library!")
         throw(err)
@@ -179,32 +179,36 @@ end
 
 
 """
-`_load_goodwin_2`
+`_load_goodwin_general`
 
-Load the 2-equation Goodwin model.
+Load the generalized Goodwin model.
+
+**References**
+- Sanchez, Luis A. "Global asymptotic stability of the Goodwin system with
+    repression." Nonlinear analysis: real world applications 10.4 (2009):
+    2151-2156.
 """
-function _load_goodwin_2(problem_type)
+function _load_goodwin_general(problem_type; n_equations=3)
 
     function model!(du, u, p, t)
-
-        # Variables
-        x, y = u
         
         # Parameters
-        K, n, a1, a2, d1, d2 = p
+        K, n = p
         
         # Equations
-        du[1] = a1 * K^n / (K^n + y^n) - d1 * x
-        du[2] = a2 * x - d2 * y
+        du[1] = K^n / (K^n + u[end]^n) - u[1]
+        for i = 2:n_equations
+            du[i] = u[i-1] - u[i]
+        end
 
     end
 
     # Common variables for all model types
-    tspan = (0.0, 100.0)
-    variable_names = ["x", "y"]
-    parameter_names = ["K", "n", "a1", "a2", "d1", "d2"]
-    p = [1.0, 10.0, 5.0, 5.0, 0.5, 0.5]
-    u0 = [0.1, 0.1]
+    tspan = (0.0, 10.0)
+    variable_names = ["x$i" for i in 1:n_equations]
+    parameter_names = ["K", "n"]
+    p = [0.1, 12.0]
+    u0 = fill(0.1, n_equations)
     input = (Matrix{Float64}(undef, 0, 0), "")
     output = sol -> Matrix(sol[:, :]')
         
@@ -220,6 +224,90 @@ function _load_goodwin_2(problem_type)
     else
 
         msg = "Problem type `$problem_type` not implemented! Use `ode`."
+        err = OscillatorPopulationError(msg)
+        throw(err)
+
+    end
+
+    model = Model(variable_names, parameter_names, problem, solver_algorithm,
+        solver_parameters, input, output)
+        
+    return model
+
+end
+
+
+"""
+`_load_van_der_pol`
+
+Load the Van der Pol model.
+
+**References**
+- Namiko Mitarai, Uri Alon, and Mogens H. Jensen. "Entrainment of noise-induced
+    and limit cycle oscillators under weak noise." Chaos: An Interdisciplinary
+    Journal of Nonlinear Science 23.2 (2013): 023125.
+"""
+function _load_van_der_pol(problem_type)
+
+    function model!(du, u, p, t)
+
+        # Variables
+        x, y = u
+        
+        # Parameters
+        B, d, I = p
+        
+        # Equations
+        du[1] = y
+        du[2] = -(B * x^2 - d) * y - x + I
+
+    end
+
+    function noise!(du, u, p, t)
+    
+        # Parameters
+        σ = p[end]
+    
+        # Equations
+        du[1] = σ
+        du[2] = σ
+
+    end
+
+    # Common variables for all model types
+    tspan = (0.0, 100.0)
+    variable_names = ["x", "y"]
+    parameter_names = ["B", "d", "I"]
+    p = [10.0, 2.0, 0.0]
+    u0 = [0.1, 0.1]
+    input = (Matrix{Float64}(undef, 0, 0), "")
+    output = sol -> Matrix(sol[:, :]')
+        
+    if problem_type == "ode"
+        
+        # Create an ODE problem
+        problem = ODEProblem(model!, u0, tspan, p)
+    
+        # Set solver parameters
+        solver_algorithm = DP5()
+        solver_parameters = (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+
+    elseif problem_type == "sde"
+
+        # Extend parameters by the noise intensity
+        push!(parameter_names, "σ")
+        push!(p, 0.1)
+
+        # Create an SDE problem
+        problem = SDEProblem(model!, noise!, u0, tspan, p)
+                
+        # Set solver parameters
+        solver_algorithm = SOSRI()
+        solver_parameters = (saveat=0.01,)
+
+    else
+
+        msg = "Problem type `$problem_type` not implemented! Use `ode` or `sde`."
         err = OscillatorPopulationError(msg)
         throw(err)
 
