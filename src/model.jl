@@ -280,7 +280,7 @@ end
 
 
 """
-`get_parameter_value`
+`get_parameter`
 
 Get a parameter value.
 
