@@ -41,6 +41,8 @@ module OscillatorPopulation
 using DataFrames
 using DifferentialEquations
 using PyPlot
+using Statistics
+using StatsBase
 
 import ProgressMeter
 
@@ -65,7 +67,7 @@ include("model.jl")
 export simulate_population, plot_solution, select_time
 include("population.jl")
 
-export scan, scan_arnold
+export scan, scan_arnold, estimate_prc
 include("scan.jl")
 
 end  # module

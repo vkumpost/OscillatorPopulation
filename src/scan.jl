@@ -223,3 +223,183 @@ function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
     return df
 
 end
+
+
+"""
+`estimate_prc`
+
+Estimate arnold tongue and/or onion.
+
+**Arguments**
+- `model`: Model.
+
+**Keyword Arguments**
+- `trajectories`: Number of trajectories in the population.
+- `n_pulses`: Number of pulses to apply in the cycle.
+- `frp`: Estimated free-running period.
+- `pacing_offset`: Number of pacing periods used to entrain the model.
+- `pacing_length`: Number of pacing periods after `pacing_offset` used to
+    estimate the entrained phase of the model.
+- `offset`: Number of periods to skip after the pacing before calculating the
+    reference cycle.
+- `response_length`: Number of periods after the reference cycle used to estimate
+    the phase shift.
+- `input_parameter`: Name of the parameter on which is the input signal acting.
+- `pulse_length`: Length of the input pulse.
+- `show_plots`: If `true`, show plots visualizing the PRC estimation.
+
+**Returns**
+- `PRC`: Dataframe representing the estimated PRC. The first column correspond to
+    the times of the cycle at which a pulse was applied, normalized to interval
+    [0, 1]. The second column represents phase shift normalized to interval
+    [-0.5, 0.5]. Negative phase shift means that the peak occured before the free
+    running reference.
+"""
+function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=10,
+    pacing_length=10, offset=3, response_length=3, input_parameter="I",
+    pulse_length=nothing, show_plots=false)
+
+    # Copy model so the original is not modified
+    model_prc = deepcopy(model)
+
+    # Set pulse length, if not passed
+    if isnothing(pulse_length)
+        pulse_length = 0.5*frp
+    end
+
+    # Set maximal integration time, 2 is for the reference cycle and reserve
+    max_time = (pacing_offset + pacing_length + offset + response_length + 2) * frp
+    set_timespan!(model_prc, max_time)
+
+    # Set input events
+    events = create_events(:LD, pacing_offset + pacing_length, 0.5frp, 0.5frp)
+    set_input!(model_prc, events, input_parameter)
+
+    # Simulate reference
+    solution = simulate_population(model_prc, trajectories; save_trajectories=false)
+    if show_plots
+        t = solution.time
+        x = solution.mean[:, 1]
+        sol_events = solution.events
+        fig, axs = subplots(2, 1)
+        axs[1].plot(t, x; color="black")
+        plot_events(sol_events, ax=axs[1])
+        axs[1].set_title("Full simulation")
+    end
+    
+    # Remove offset
+    solution = select_time(solution, min_time=pacing_offset * frp)
+    if show_plots
+        t = solution.time
+        x = solution.mean[:, 1]
+        sol_events = solution.events
+        axs[2].plot(t, x; color="black")
+        plot_events(sol_events, ax=axs[2])
+    end
+
+    # Find peaks
+    t = solution.time
+    x = solution.mean[:, 1]
+    pr = findpeaks(x, t, sortstr="descend", sortref="prominence", npeaks=1)
+    ref_prom = peakprominences(pr)[1]
+    pr = findpeaks(x, t, minprominence=0.1ref_prom)
+    pks = peakheights(pr)
+    locs = peaklocations(pr)
+    if show_plots
+        axs[2].plot(locs, pks, "o", color="red")
+        axs[2].set_title("Removed transient period")
+    end
+
+    # Estimate entrainment phase
+    sol_events = solution.events
+    phase_arr = Float64[]
+    for i in 1:pacing_length
+        time_start = sol_events[i, 1]
+        time_end = time_start + frp
+        loc_arr = locs[time_start .<= locs .< time_end]
+        if length(loc_arr) > 1
+            throw("Too many peaks in the cycle, please debug!")
+        elseif length(loc_arr) == 1
+            push!(phase_arr, loc_arr[1] - time_start)
+        end
+    end
+    entrainment_phase = mean(phase_arr)
+
+    # Find the reference cycle
+    events_end = pacing_length * frp
+    idx = locs .> events_end
+    locs = locs[idx]
+    pks = pks[idx]
+    reference_start = locs[offset+1] - entrainment_phase
+    reference_end = locs[offset+2] - entrainment_phase
+    reference_start_original = reference_start + (pacing_offset * frp)
+    reference_end_original = reference_end + (pacing_offset * frp)
+    reference_frp = reference_end - reference_start
+    trajectory_start = reference_end + 2*pulse_length
+    trajectory_start_original = trajectory_start + (pacing_offset * frp)
+    idx = t .> trajectory_start
+    trajectory_time = t[idx]
+    trajectory_reference = x[idx]
+    if show_plots
+        axs[2].plot([events_end, events_end], [minimum(x), maximum(x)], "--", color="blue")
+        axs[2].plot(locs, pks, "x", color="blue")
+        axs[2].plot([reference_start, reference_start], [minimum(x), maximum(x)], color="blue")
+        axs[2].plot([reference_end, reference_end], [minimum(x), maximum(x)], color="blue")
+        axs[2].plot(trajectory_time, trajectory_reference, color="blue")
+        axs[1].plot([trajectory_start_original, trajectory_start_original], [minimum(x), maximum(x)], "--", color="blue")
+        axs[1].plot([reference_start_original, reference_start_original], [minimum(x), maximum(x)], color="blue")
+        axs[1].plot([reference_end_original, reference_end_original], [minimum(x), maximum(x)], color="blue")
+        fig.tight_layout()
+    end
+    
+    # Simulate pulse responses
+    pulse_times = Vector(range(reference_start_original, reference_end_original, length=n_pulses))
+    if show_plots
+        fig, ax_arr = subplots(length(pulse_times), 1)
+        fig_corr, ax_arr_corr = subplots(length(pulse_times), 1)
+    end
+    phase_shifts = fill(NaN, length(pulse_times))
+    for (i, pulse_time) in enumerate(pulse_times)
+
+        # Simulation with a pulse
+        events_pulse = vcat(events, [pulse_time pulse_time+pulse_length])
+        set_input!(model_prc, events_pulse, input_parameter)
+        
+        solution = simulate_population(model_prc, trajectories; save_trajectories=false)
+        t = solution.time
+        x = solution.mean[:, 1]
+        idx = t .> trajectory_start_original
+        trajectory = x[idx]
+        if show_plots
+            sol_events = solution.events
+            ax_arr[i].plot(t, x; color="black")
+            ax_arr[i].plot(trajectory_time .+ (pacing_offset * frp), trajectory; color="blue")
+            plot_events(events_pulse, ax=ax_arr[i])
+        end
+
+        # Phase shift calculation´
+        lags = (-length(trajectory)+1) : (length(trajectory)-1)
+        R = crosscor(trajectory_reference, trajectory, lags)
+        R_time = trajectory_time .- trajectory_time[1]
+        R_time = [-R_time[end:-1:2]..., 0, R_time[2:end]...]
+        pr = findpeaks(R, R_time, sortstr="descend", sortref="prominence")
+        pk = peakheights(pr)[1]
+        loc = peaklocations(pr)[1]
+        phase_shifts[i] = loc / reference_frp
+        if show_plots
+            ax_arr_corr[i].plot(R_time, R, color="black")
+            ax_arr_corr[i].plot(loc, pk, "o", color="red")
+        end
+
+    end
+
+    cycle_times = (pulse_times .- pulse_times[1]) ./ reference_frp
+    PRC = DataFrame(pulse_time=cycle_times, phase_shift=phase_shifts)
+    if show_plots
+        fig, ax = subplots()
+        ax.plot(PRC[!, "pulse_time"], PRC[!, "phase_shift"])
+    end
+
+    return PRC
+
+end
