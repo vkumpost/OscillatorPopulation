@@ -44,6 +44,9 @@ using PyPlot
 
 import ProgressMeter
 
+include("FindPeaks/FindPeaks.jl")
+using .FindPeaks
+
 export create_events, create_events_cycle, events_to_function, plot_events,
     create_callback
 include("events.jl")
