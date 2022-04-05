@@ -58,11 +58,11 @@ Scan parameters of a model.
 **Arguments**
 - `model`: Model.
 - `parameters`: A vector of pairs. Pairs indicate parameter names and values.
-- `simulation_function`: A function that takes in `PopulationSolution`, and returns
+- `simulation_function`: A function that takes in `Model`, and returns
     some descriptive parameters. If the function is called without any arguments,
     it returns the names of the parameters as a vector of strings. For example:
     ```
-    julia> simulation_function(solution)
+    julia> simulation_function(model)
     [1.1, 2.2, 3.3]
     julia> simulation_function()
     ["Period", "Amplitude", "Phase"]
@@ -138,11 +138,11 @@ Estimate arnold tongue and/or onion.
 
 **Arguments**
 - `model`: Model.
-- `simulation_function`: A function that takes in `PopulationSolution`, and returns
+- `simulation_function`: A function that takes in `Model`, and returns
     some descriptive parameters. If the function is called without any arguments,
     it returns the names of the parameters as a vector of strings. For example:
     ```
-    julia> simulation_function(solution)
+    julia> simulation_function(model)
     [1.1, 2.2, 3.3]
     julia> simulation_function()
     ["Period", "Amplitude", "Phase"]
