@@ -325,7 +325,7 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
     end
     entrainment_phase = mean(phase_arr)
 
-    # Find the reference cycle
+    ## Find the reference cycle ===============================================
     events_end = pacing_length * frp
     idx = locs .> events_end
     locs = locs[idx]
@@ -352,24 +352,35 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
         fig.tight_layout()
     end
     
-    # Simulate pulse responses
+    ## Simulate pulse responses ===============================================
+    # Create a vector with all pulse times along the cycle
     pulse_times = Vector(range(reference_start_original, reference_end_original, length=n_pulses))
+
+    # Prepare figures and axes for the visual control
     if show_plots
         fig, ax_arr = subplots(length(pulse_times), 1)
         fig_corr, ax_arr_corr = subplots(length(pulse_times), 1)
     end
+
+    # Estimated the phase shifts for the different pulse times along the cycle
     phase_shifts = fill(NaN, length(pulse_times))
     for (i, pulse_time) in enumerate(pulse_times)
 
-        # Simulation with a pulse
+        ## Simulation with a pulse ===
+        # Add a perturbation pulse to the original pacing events
         events_pulse = vcat(events, [pulse_time pulse_time+pulse_length])
         set_input!(model_prc, events_pulse, input_parameter)
         
+        # Simulate the model with the perturbation pulse
         solution = simulate_population(model_prc, trajectories; save_trajectories=false)
         t = solution.time
         x = solution.mean[:, 1]
+
+        # Extract the last part to be compared with the reference
         idx = t .> trajectory_start_original
         trajectory = x[idx]
+
+        # Plot the simulation for the visual verification
         if show_plots
             sol_events = solution.events
             ax_arr[i].plot(t, x; color="black")
@@ -377,15 +388,25 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
             plot_events(events_pulse, ax=ax_arr[i])
         end
 
-        # Phase shift calculation´
+        ## Phase shift calculation ===
+        # Calculate cross-correlation between the perturbated and reference trajectory
         lags = (-length(trajectory)+1) : (length(trajectory)-1)
-        R = crosscor(trajectory_reference, trajectory, lags)
+        R = crosscor(trajectory, trajectory_reference, lags)
+
+        # Map lags to times and find peaks in the cross-correlation function
         R_time = trajectory_time .- trajectory_time[1]
         R_time = [-R_time[end:-1:2]..., 0, R_time[2:end]...]
-        pr = findpeaks(R, R_time, sortstr="descend", sortref="prominence")
-        pk = peakheights(pr)[1]
-        loc = peaklocations(pr)[1]
+        pr = findpeaks(R, R_time)
+
+        # Find peak in the cross-correlation function that is the closest to 0
+        idx = argmin(abs.(peaklocations(pr)))
+        pk = peakheights(pr)[idx]
+        loc = peaklocations(pr)[idx]
+
+        # Normalize the phase shift by the reference FRP
         phase_shifts[i] = loc / reference_frp
+
+        # Plot the cross-correlation function and the chosen peak
         if show_plots
             ax_arr_corr[i].plot(R_time, R, color="black")
             ax_arr_corr[i].plot(loc, pk, "o", color="red")
@@ -393,11 +414,16 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
 
     end
 
+    # Normalize pulse times on the unit cycle
     cycle_times = (pulse_times .- pulse_times[1]) ./ reference_frp
+
+    # Save the estimated PRC as a DataFrame
     PRC = DataFrame(pulse_time=cycle_times, phase_shift=phase_shifts)
+
+    # Plot the estimated PRC
     if show_plots
         fig, ax = subplots()
-        ax.plot(PRC[!, "pulse_time"], PRC[!, "phase_shift"])
+        ax.plot(PRC[!, "pulse_time"], PRC[!, "phase_shift"], "o")
     end
 
     return PRC
