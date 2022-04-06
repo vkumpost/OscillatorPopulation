@@ -181,7 +181,7 @@ function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
 
     # Iterate all parameter value combinations
     lk = ReentrantLock()
-    for i = 1:n  # Threads.@threads 
+    Threads.@threads for i = 1:n
 
         # Protect the original model from overwriting
         model2 = deepcopy(model)
