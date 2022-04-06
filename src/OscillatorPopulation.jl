@@ -12,6 +12,9 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 **Exceptions**
 - `OscillatorPopulationError`: A general exeption if something goes wrong.
 
+**Metrics**
+- `estimate_phase`: Estimate entrainment phase.
+
 **Model Library**
 - `load_model`: Load a model from the library.
 
@@ -57,6 +60,9 @@ include("events.jl")
 
 export OscillatorPopulationError
 include("exceptions.jl")
+
+export estimate_phase
+include("metrics.jl")
 
 export load_model
 include("model_library.jl")
