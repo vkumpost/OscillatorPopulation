@@ -226,6 +226,113 @@ end
 
 
 """
+`plot_arnold`
+
+Plot Arnold tongue, onion or phototongue.
+
+**Arguments**
+- `df`: `DataFrame` with `input_period`, `input_amplitude`, and
+    `input_photoperiod` columns returned by `scan_arnold` function.
+- `type`: `"tongue"` for Arnold tongue, `"onion"` for Arnold onion, or `"phototongue"`
+    for phototongue.
+
+**Keyword Arguments**
+- `property_name`: Name of the column to plot.
+- `error_name`: Column with error values.
+- `max_error`: Maximal allowed error for `error_name` column.
+- `fixed_value`: Fixed value for the third dimension of the "Arnold" space.
+- `color_limits`: Color limits specified as `[cmin, cmax]`.
+- `show_colorbar`: If `true`, show a colorbar.
+- `ax`: PyPlot axes.
+"""
+function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_name=nothing,
+    max_error=nothing, fixed_value=nothing, color_limits=nothing,
+    show_colorbar=true, ax=gca())
+
+    if type == "tongue"
+        x_axis_name = "input_period"
+        y_axis_name = "input_amplitude"
+        fixed_name = "input_photoperiod"
+    elseif type == "onion"
+        x_axis_name = "input_period"
+        y_axis_name = "input_photoperiod"
+        fixed_name = "input_amplitude"
+    elseif type == "phototongue"
+        x_axis_name = "input_photoperiod"
+        y_axis_name = "input_amplitude"
+        fixed_name = "input_period"
+    end
+
+    # Select data for the given input photoperiod
+    if isnothing(fixed_value)
+        fixed_value = df[1, fixed_name]
+    end
+    idx = df[:, fixed_name] .== fixed_value
+    if sum(idx) == 0
+        throw("No rows for input_photoperiod=$fixed_value")
+    end
+    df = df[idx, :]
+
+    # Prepare axes - x-axis: input period, y-axis: input amplitude
+    n_x_values = length(unique(df[:, x_axis_name]))
+    n_y_values = length(unique(df[:, y_axis_name]))
+    x_values_matrix = reshape(df[:, x_axis_name], n_y_values, n_x_values)
+    y_values_matrix = reshape(df[:, y_axis_name], n_y_values, n_x_values)
+
+    # Estimate which points are entrained
+    if !isnothing(error_name)
+        error_matrix = reshape(df[:, error_name], n_y_values, n_x_values)
+        idx = error_matrix .<= max_error
+    else
+        idx = fill(true, n_y_values, n_x_values)
+    end
+
+    # Plot Arnold tongue
+    if isnothing(property_name)
+        property_name = "Entrainment"
+        Z = fill(1, n_y_values, n_x_values)
+        Z[idx] .= 0
+        h = ax.pcolor(x_values_matrix, y_values_matrix, Z, rasterized=true)
+    else
+        Z = reshape(df[:, property_name], n_y_values, n_x_values)
+        Z[.!idx] .= NaN
+        h = ax.pcolor(x_values_matrix, y_values_matrix, Z, rasterized=true)
+    end
+
+    # Set color limits
+    if !isnothing(color_limits)
+        h.set_clim(color_limits[1], color_limits[2])
+    end
+    
+    # Plot colorbar
+    if show_colorbar
+        cbar = colorbar(h, ax=ax)
+        cbar_label = replace(property_name, "_" => " ")
+        cbar_label = uppercase(cbar_label[1]) * cbar_label[2:end]
+        cbar.set_label(cbar_label, labelpad=0)
+    end
+
+    # Label axes
+    if type == "tongue"
+        ax.set_title("Arnold tongue", loc="left", pad=0)
+        ax.set_xlabel("Input period", labelpad=0)
+        ax.set_ylabel("Input amplitude", labelpad=0)
+    elseif type == "onion"
+        ax.set_title("Arnold onion", loc="left", pad=0)
+        ax.set_xlabel("Input period", labelpad=0)
+        ax.set_ylabel("Input photoperiod", labelpad=0)
+    elseif type == "phototongue"
+        ax.set_title("Phototongue", loc="left", pad=0)
+        ax.set_xlabel("Input photoperiod", labelpad=0)
+        ax.set_ylabel("Input amplitude", labelpad=0)
+    end
+
+    return h
+
+end
+
+
+"""
 `estimate_prc`
 
 Estimate arnold tongue and/or onion.

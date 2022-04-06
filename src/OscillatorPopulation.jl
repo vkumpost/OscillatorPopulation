@@ -35,6 +35,8 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 **Parameter Scans**
 - `scan`: Scan parameter values.
 - `scan_arnold`: Scan input-signal parameters (amplitude, period, photoperiod).
+- `plot_arnold`: Plot the output of `scan_arnold`.
+- `estimate_prc`: Estimate a phase response curve.
 """
 module OscillatorPopulation
 
@@ -67,7 +69,7 @@ include("model.jl")
 export simulate_population, plot_solution, select_time
 include("population.jl")
 
-export scan, scan_arnold, estimate_prc
+export scan, scan_arnold, plot_arnold, estimate_prc
 include("scan.jl")
 
 end  # module

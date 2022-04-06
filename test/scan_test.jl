@@ -81,6 +81,12 @@ end
 
 end
 
+@testset "plot_arnold" begin
+
+    @test plot_arnold isa Function
+
+end
+
 @testset "estimate_prc" begin
 
     @test estimate_prc isa Function
