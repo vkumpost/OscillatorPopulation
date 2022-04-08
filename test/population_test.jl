@@ -54,6 +54,23 @@
     @test isempty(solution.events)
     @test solution.success
 
+    # Seed for the random number generator
+    model = create_dummy("sde")
+    model.problem.p[end] = 1.0
+    solution1 = simulate_population(model, 10, seed=5)
+
+    # - each trajectory is different
+    @test any(solution1.trajectories[:, :, 1] .!= solution1.trajectories[:, :, 2])
+
+    # - with a different seed, we get a different solution
+    solution2 = simulate_population(model, 10, seed=19)
+    @test any(solution1.trajectories .!= solution2.trajectories)
+
+    # - with the same seed, we get the same solution
+    solution1 = simulate_population(model, 10, seed=37)
+    solution2 = simulate_population(model, 10, seed=37)
+    @test any(solution1.trajectories .== solution2.trajectories)
+
 end
 
 @testset "plot_solution" begin

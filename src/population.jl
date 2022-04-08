@@ -32,8 +32,8 @@ Simulate a population.
 - `trajectories`: Number of trajectories to simulate.
 
 **Keyword Arguments**
-- `initial_conditions`: Matrix. Columns are variables and rows are \
-
+- `seed`: A number specifying a seed for the random number generator.
+- `initial_conditions`: Matrix. Columns are variables and rows are time points.
 - `parameters`: Tuple of parameter names (vector) and parameter values (matrix).
 - `save_trajectories`: If `false`, only mean is saved.
 - `show_progress`: If `true`, show a progress bar in the terminal.
@@ -42,7 +42,7 @@ Simulate a population.
 - `solution`: PopulationSolution.
 """
 function simulate_population(model::Model, trajectories=1;
-    initial_conditions=nothing, parameters=nothing,
+    seed=nothing, initial_conditions=nothing, parameters=nothing, 
     save_trajectories=true, show_progress=false)
 
     # Prepare variables for PopulationSolution fields
@@ -50,6 +50,12 @@ function simulate_population(model::Model, trajectories=1;
     m = Matrix{Float64}(undef, 0, 0)  # mean
     U = Array{Float64, 3}(undef, 0, 0, 0)  # trajectories
     events = model.input[1]  # events
+
+    # Generate seeds for the individual trajectories (if passed)
+    if !isnothing(seed)
+        rng = MersenneTwister(seed)
+        seed_arr = round.(Int, rand(rng, trajectories) .* 1_000_000)
+    end
     
     # Initialize the porgress meter
     if show_progress
@@ -63,6 +69,11 @@ function simulate_population(model::Model, trajectories=1;
 
         # Make a copy of the model
         model2 = deepcopy(model)
+
+        # Set seed (if passed)
+        if !isnothing(seed)
+            set_solver!(model2, seed=seed_arr[i])
+        end
 
         # Set initial conditions (if passed)
         if !isnothing(initial_conditions)

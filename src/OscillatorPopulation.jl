@@ -46,6 +46,7 @@ module OscillatorPopulation
 using DataFrames
 using DifferentialEquations
 using PyPlot
+using Random
 using Statistics
 using StatsBase
 
