@@ -62,7 +62,20 @@ end
     @test model.output isa Function
 
     # sde model
-    @test_throws OscillatorPopulationError load_model("goodwin", "sde")
+    model = load_model("goodwin", "sde")
+    @test model.variable_names == ["x", "y", "z"]
+    @test model.parameter_names == ["K", "n", "a1", "a2", "a3", "d1", "d2", "d3", "σ"]
+    @test model.problem isa SDEProblem
+    @test model.problem.u0 == [0.1, 0.1, 0.1]
+    @test model.problem.tspan == (0.0, 100.0)
+    @test model.problem.p == [1.0, 10.0, 5.0, 5.0, 5.0, 0.5, 0.5, 0.5, 0.1]
+    @test model.solver_algorithm == EM()
+    @test model.solver_parameters == (dt=0.0001, saveat=0.01,)
+    @test isempty(model.input[1])
+    @test model.input[1] isa Matrix
+    @test isempty(model.input[2])
+    @test model.input[2] isa String
+    @test model.output isa Function
 
     # jump model
     @test_throws OscillatorPopulationError load_model("goodwin", "jump")

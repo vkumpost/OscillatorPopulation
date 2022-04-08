@@ -133,6 +133,9 @@ function _load_goodwin(problem_type)
 
         # Variables
         x, y, z = u
+        x = max(0, x)
+        y = max(0, y)
+        z = max(0, z)
         
         # Parameters
         K, n, a1, a2, a3, d1, d2, d3 = p
@@ -141,6 +144,27 @@ function _load_goodwin(problem_type)
         du[1] = a1 * K^n / (K^n + z^n) - d1 * x
         du[2] = a2 * x - d2 * y
         du[3] = a3 * y - d3 * z
+
+    end
+
+    function noise!(du, u, p, t)
+
+        # Variables
+        x, y, z = u
+        x = max(0, x)
+        y = max(0, y)
+        z = max(0, z)
+
+        # Parameters
+        K, n, a1, a2, a3, d1, d2, d3, σ = p
+
+        # Equations
+        du[1, 1] = σ * sqrt(a1 * K^n / (K^n + z^n))
+        du[1, 2] = σ * -sqrt(d1 * x)
+        du[2, 3] = σ * sqrt(a2 * x)
+        du[2, 4] = σ * -sqrt(d2 * y)
+        du[3, 5] = σ * sqrt(a3 * y)
+        du[3, 6] = σ * -sqrt(d3 * z)
 
     end
 
@@ -162,9 +186,22 @@ function _load_goodwin(problem_type)
         solver_algorithm = DP5()
         solver_parameters = (saveat=0.01, reltol=1e-9, abstol=1e-9,)
 
+    elseif problem_type == "sde"
+
+        # Create an SDE model
+        push!(parameter_names, "σ")
+        push!(p, 0.1)
+        noise_rate_prototype = zeros(3, 6)
+        problem = SDEProblem(model!, noise!, u0, tspan, p;
+            noise_rate_prototype=noise_rate_prototype)
+
+        # Set solver parameters
+        solver_algorithm = EM()
+        solver_parameters = (dt=0.0001, saveat=0.01,)
+
     else
 
-        msg = "Problem type `$problem_type` not implemented! Use `ode`."
+        msg = "Problem type `$problem_type` not implemented! Use `ode` or `sde`."
         err = OscillatorPopulationError(msg)
         throw(err)
 
