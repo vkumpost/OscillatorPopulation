@@ -45,20 +45,20 @@ end
     events = create_events_cycle(9, 4)
     @test events == [0 2; 4 6; 8 10]
 
-    # Change photoperiod
+    # Change duty cycle
     events = create_events_cycle(9, 4, 0.75)
     @test events == [0 3; 4 7; 8 11]
 
-    # Photoperiod is 0
+    # Duty cycle is 0
     events = create_events_cycle(9, 4, 0)
     @test events isa Matrix
     @test isempty(events)
 
-    # Photoperiod is 1
+    # Duty cycle is 1
     events = create_events_cycle(9, 4, 1)
     @test events == [0 9]
 
-    # Photoperiod is outside of the required interval [0, 1]
+    # Duty cycle is outside of the required interval [0, 1]
     @test_throws OscillatorPopulationError create_events_cycle(9, 4, 10)
     @test_throws OscillatorPopulationError create_events_cycle(9, 4, -0.1)
 

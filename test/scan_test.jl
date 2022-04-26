@@ -85,16 +85,16 @@ end
     end
     input_amplitudes = [0.5, 1.0, 1.5]
     input_periods = [5.0]
-    input_photoperiods = [0.2, 0.5]
+    input_duty_cycles = [0.2, 0.5]
     input_parameter = "c"
     df = scan_arnold(model, simulation_function;
         input_amplitudes=input_amplitudes,
         input_periods=input_periods,
-        input_photoperiods=input_photoperiods,
+        input_duty_cycles=input_duty_cycles,
         input_parameter=input_parameter)
 
     names = OscillatorPopulation.DataFrames.names(df)
-    @test names == ["input_amplitude", "input_period", "input_photoperiod",
+    @test names == ["input_amplitude", "input_period", "input_duty_cycle",
         "2nd_event_end", "input_parameter", "input_value"]
     @test df[:, 1] == [0.5, 0.5, 1.0, 1.0, 1.5, 1.5]
     @test df[:, 2] == [5.0, 5.0, 5.0, 5.0, 5.0, 5.0]

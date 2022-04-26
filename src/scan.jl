@@ -201,22 +201,22 @@ Estimate arnold tongue and/or onion.
 **Keyword Arguments**
 - `input_amplitudes`: Input amplitudes to scan.
 - `input_periods`: Input periods to scan.
-- `input_photoperiods`: Input photoperiods to scan.
+- `input_duty_cycles`: Input duty cycles to scan.
 - `input_parameter_name`: Name of the parameter that controls the input amplitude.
 - `show_progress`: If true, show progress in the terminal.
 
 **Returns**
 - `df`: Dataframe with results. First columns correspond to the input amplitude,
-    period, and photoperiod. The following columns correspond to the values
+    period, and duty cycle. The following columns correspond to the values
     returned by `simulation_function` for the corresponding
     parameters.
 """
 function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
-    input_periods=[1.0], input_photoperiods=[0.5], input_parameter="I",
+    input_periods=[1.0], input_duty_cycles=[0.5], input_parameter="I",
     show_progress=false)
 
-    # Find all possible combinations of input amplitudes, periods and photoperiods
-    vectors = [input_amplitudes, input_periods, input_photoperiods]
+    # Find all possible combinations of input amplitudes, periods and duty cycles
+    vectors = [input_amplitudes, input_periods, input_duty_cycles]
     input_value_combinations = _find_all_combinations(vectors)
     n = size(input_value_combinations, 1)
     
@@ -236,14 +236,14 @@ function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
         # Protect the original model from overwriting
         model2 = deepcopy(model)
 
-        # Extract input amplitude, period, and photoperiod
+        # Extract input amplitude, period, and duty cycle
         input_amplitude = input_value_combinations[i, 1]
         input_period = input_value_combinations[i, 2]
-        input_photoperiod = input_value_combinations[i, 3]
+        input_duty_cycle = input_value_combinations[i, 3]
 
         # Generate input
         end_time = model.problem.tspan[2]
-        events = create_events_cycle(end_time, input_period, input_photoperiod)
+        events = create_events_cycle(end_time, input_period, input_duty_cycle)
         set_input!(model2, events, input_parameter)
         set_parameter!(model2, input_parameter, input_amplitude)
 
@@ -251,7 +251,7 @@ function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
         try
             scan_results[i, :] = simulation_function(model2)
         catch err
-            @warn "An error occured for [$input_amplitude, $input_period, $input_photoperiod]"
+            @warn "An error occured for [I, T, D] = [$input_amplitude, $input_period, $input_duty_cycle]"
             throw(err)
         end
 
@@ -266,7 +266,7 @@ function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
 
     # Build the output dataframe
     matrix = hcat(input_value_combinations, scan_results)
-    input_header = ["input_amplitude", "input_period", "input_photoperiod"]
+    input_header = ["input_amplitude", "input_period", "input_duty_cycle"]
     names = vcat(input_header, scan_header)
     df = DataFrame(matrix, names)
 
@@ -278,13 +278,13 @@ end
 """
 `plot_arnold`
 
-Plot Arnold tongue, onion or phototongue.
+Plot Arnold tongue or onion.
 
 **Arguments**
 - `df`: `DataFrame` with `input_period`, `input_amplitude`, and
-    `input_photoperiod` columns returned by `scan_arnold` function.
-- `type`: `"tongue"` for Arnold tongue, `"onion"` for Arnold onion, or `"phototongue"`
-    for phototongue.
+    `input_duty_cycle` columns returned by `scan_arnold` function.
+- `type`: `"tongue"` for Arnold tongue, `"onion"` for Arnold onion, or
+    `"duty_cycle_tongue"` for duty cycle Arnold tongue.
 
 **Keyword Arguments**
 - `property_name`: Name of the column to plot.
@@ -302,13 +302,13 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
     if type == "tongue"
         x_axis_name = "input_period"
         y_axis_name = "input_amplitude"
-        fixed_name = "input_photoperiod"
+        fixed_name = "input_duty_cycle"
     elseif type == "onion"
         x_axis_name = "input_period"
-        y_axis_name = "input_photoperiod"
+        y_axis_name = "input_duty_cycle"
         fixed_name = "input_amplitude"
-    elseif type == "phototongue"
-        x_axis_name = "input_photoperiod"
+    elseif type == "duty_cycle_tongue"
+        x_axis_name = "input_duty_cycle"
         y_axis_name = "input_amplitude"
         fixed_name = "input_period"
     end
@@ -319,7 +319,7 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
     end
     idx = df[:, fixed_name] .== fixed_value
     if sum(idx) == 0
-        throw("No rows for input_photoperiod=$fixed_value")
+        throw("No rows for input_duty_cycle=$fixed_value")
     end
     df = df[idx, :]
 
@@ -370,10 +370,10 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
     elseif type == "onion"
         ax.set_title("Arnold onion", loc="left", pad=0)
         ax.set_xlabel("Input period", labelpad=0)
-        ax.set_ylabel("Input photoperiod", labelpad=0)
-    elseif type == "phototongue"
-        ax.set_title("Phototongue", loc="left", pad=0)
-        ax.set_xlabel("Input photoperiod", labelpad=0)
+        ax.set_ylabel("Input duty cycle", labelpad=0)
+    elseif type == "duty_cycle_tongue"
+        ax.set_title("Arnold tongue (duty cycle)", loc="left", pad=0)
+        ax.set_xlabel("Input duty cycle", labelpad=0)
         ax.set_ylabel("Input amplitude", labelpad=0)
     end
 

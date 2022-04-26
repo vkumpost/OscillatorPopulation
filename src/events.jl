@@ -113,25 +113,25 @@ Create an events matrix for a regular light:dark cycle.
 - `period`: Period of the cycle.
 
 **Optional Arguments**
-- `photoperiod`: Photoperiod of a cycle (fraction of the period spend in light).
+- `duty_cycle`: Duty cycle (fraction of the period spend in light).
 
 **Returns**
 - `events`: Two-column matrix decoding times of light onsets (1st column) and
     light offsets (2nd columns).
 """
-function create_events_cycle(duration, period, photoperiod=0.5)
+function create_events_cycle(duration, period, duty_cycle=0.5)
 
-    if photoperiod == 1
+    if duty_cycle == 1
         events = create_events(:LL, duration)    
-    elseif photoperiod == 0
+    elseif duty_cycle == 0
         events = create_events(:DD, duration)
-    elseif 0 < photoperiod < 1
-        light_duration = period*photoperiod
-        night_duration = period*(1-photoperiod)
+    elseif 0 < duty_cycle < 1
+        light_duration = period*duty_cycle
+        night_duration = period*(1-duty_cycle)
         n_repetitions = ceil(duration / period)
         events = create_events(:LD, n_repetitions, light_duration, night_duration)
     else
-        msg = "Photoperiod is $photoperiod, but must be between 0 and 1!"
+        msg = "Duty cycle is $duty_cycle, but must be between 0 and 1!"
         err = OscillatorPopulationError(msg)
         throw(err)
     end
