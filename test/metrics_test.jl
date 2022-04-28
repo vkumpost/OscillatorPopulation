@@ -51,3 +51,19 @@
     @test phase_error ≈ 0.25
 
 end
+
+@testset "create_simulation_function" begin
+    
+    model = create_dummy("ode")
+
+    fun = create_simulation_function(; transient=0.5, variable=2)
+    names = fun()
+    @test names == ["minimum", "maximum", "phase", "phase_error"]
+    
+    properties = fun(model)
+    @test properties[1] == 4
+    @test properties[2] == 8
+    @test isnan(properties[3])
+    @test isnan(properties[4])
+
+end

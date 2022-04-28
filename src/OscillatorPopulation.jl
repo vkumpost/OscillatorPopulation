@@ -14,6 +14,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 
 **Metrics**
 - `estimate_phase`: Estimate entrainment phase.
+- `create_simulation_function`: Generate a simulation function.
 
 **Model Library**
 - `load_model`: Load a model from the library.
@@ -37,7 +38,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 
 **Parameter Scans**
 - `scan`: Scan parameter values.
-- `scan_arnold`: Scan input-signal parameters (amplitude, period, photoperiod).
+- `scan_arnold`: Scan input-signal parameters (amplitude, period, duty cycle).
 - `plot_arnold`: Plot the output of `scan_arnold`.
 - `estimate_prc`: Estimate a phase response curve.
 """
@@ -62,7 +63,7 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export estimate_phase
+export estimate_phase, create_simulation_function
 include("metrics.jl")
 
 export load_model
