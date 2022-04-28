@@ -65,6 +65,66 @@ end
 
 
 """
+`estimate_period(t, x; kwargs...)`
+
+Estimate period of a signal based on its autocorrelation function.
+
+**Argument**
+- `t`: Time vector.
+- `x`: Data vector.
+
+**Keyword Arguments**
+- `n_lags`: Number of lags used for autocorrelation. Default is `length(x)`.
+- `show_plots`: Visualize the result. Default is false.
+
+**Returns**
+- `period`: Estimated period (the position of the highest).
+- `peak`: Height of the highest peak.
+"""
+function estimate_period(t, x; n_lags=length(x), show_plots=false)
+
+    # If x is constat, return NaNs
+    if all(x[1] .== x)
+        return (NaN, NaN)
+    end
+
+    # Normalize input
+    x = zscore(x)
+
+    # Calculate autocorrelation
+    n = min(n_lags, length(x))  # number of lags to calculate
+    R = autocor(x, 0:(n-1))  # autocorrelation function
+
+    # Find peaks of the autocorrelation function
+    pr = findpeaks(R, (0:(n-1)) .* mean(diff(t)), sortstr="descend")
+
+    # If there are no peaks, return NaNs
+    if length(pr) == 0
+        return (NaN, NaN)
+    end
+
+    # Get the highest peaks (peak height and location = period)
+    peak = peakheights(pr)[1]
+    period = peaklocations(pr)[1]
+
+    # Visualize the results
+    if show_plots
+        fig, axs = subplots(2)
+        axs[1].plot(t, x, color="black")
+        axs[1].set_title("Time Series")
+        axs[2].plot((0:(n-1)) .* mean(diff(t)), R, color="black")
+        axs[2].plot([period, period], [0, peak], color="red")
+        axs[2].set_title("peak = $(round(peak, digits=2)), " *
+            "period = $(round(period, digits=2))")
+        fig.tight_layout()
+    end
+
+    return (period, peak)
+
+end
+
+
+"""
 `create_simulation_function`
 
 Generate a function that simulates a model population and apply metrics to the

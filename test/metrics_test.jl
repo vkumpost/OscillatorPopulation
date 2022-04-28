@@ -52,6 +52,26 @@
 
 end
 
+@testset "estimate_period" begin
+
+    t = 0:0.01:20
+    x = sin.(2π .* (1/0.1) .* t)
+    T, _ = estimate_period(t, x)
+    @test T ≈ 0.1
+
+    x = sin.(2π .* (1/5) .* t)
+    T, _ = estimate_period(t, x)
+    @test T ≈ 5
+
+    T, _ = estimate_period(t, x; n_lags=1000)
+    @test T ≈ 5
+
+    T, Te = estimate_period(t, x; n_lags=400)
+    @test isnan(T)
+    @test isnan(Te)
+
+end
+
 @testset "create_simulation_function" begin
     
     model = create_dummy("ode")

@@ -14,6 +14,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 
 **Metrics**
 - `estimate_phase`: Estimate entrainment phase.
+- `estimate_period`: Estimate period.
 - `create_simulation_function`: Generate a simulation function.
 
 **Model Library**
@@ -63,7 +64,7 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export estimate_phase, create_simulation_function
+export estimate_phase, estimate_period, create_simulation_function
 include("metrics.jl")
 
 export load_model
