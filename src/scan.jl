@@ -293,11 +293,12 @@ Plot Arnold tongue or onion.
 - `fixed_value`: Fixed value for the third dimension of the "Arnold" space.
 - `color_limits`: Color limits specified as `[cmin, cmax]`.
 - `show_colorbar`: If `true`, show a colorbar.
+- `colorbar_label`: Label for the colorbar.
 - `ax`: PyPlot axes.
 """
 function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_name=nothing,
     max_error=nothing, fixed_value=nothing, color_limits=nothing,
-    show_colorbar=true, ax=gca())
+    show_colorbar=true, colorbar_label=nothing, ax=gca())
 
     if type == "tongue"
         x_axis_name = "input_period"
@@ -357,9 +358,13 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
     # Plot colorbar
     if show_colorbar
         cbar = colorbar(h, ax=ax)
-        cbar_label = replace(property_name, "_" => " ")
-        cbar_label = uppercase(cbar_label[1]) * cbar_label[2:end]
-        cbar.set_label(cbar_label, labelpad=0)
+        if isnothing(colorbar_label)
+            cbar_label = replace(property_name, "_" => " ")
+            cbar_label = uppercase(cbar_label[1]) * cbar_label[2:end]
+            cbar.set_label(cbar_label, labelpad=0)
+        else
+            cbar.set_label(colorbar_label, labelpad=0)
+        end
     end
 
     # Label axes
