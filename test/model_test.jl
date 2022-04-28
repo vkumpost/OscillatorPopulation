@@ -249,6 +249,13 @@ end
     set_input!(model, events, "b")
     @test model.solver_parameters.callback isa DiscreteCallback
 
+    # Test that tailing events are removed
+    model = create_dummy("ode")
+    events = [1 2; 3 4; 5 6; 7 8]
+    set_input!(model, events, "b")
+    @test model.input[1] == events[1:2, :]
+    @test model.input[2] == "b"
+
 end
 
 @testset "print_info" begin

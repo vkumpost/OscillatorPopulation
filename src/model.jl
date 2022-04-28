@@ -392,6 +392,11 @@ function set_input!(model::Model, events::Matrix, parameter_name="I")
 
     parameter_index = get_parameter_index(model, parameter_name)
 
+    # Remove tailing events
+    tspan = _get_problem_property(model, "tspan")
+    idx = events[:, 1] .< tspan[end]
+    events = events[idx, :]
+
     # Create a callback
     if model.problem isa Union{ODEProblem, SDEProblem}
         # Use continuous callback for ODE and SDE models
