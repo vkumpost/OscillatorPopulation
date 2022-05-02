@@ -116,7 +116,20 @@ end
     @test model.output isa Function
 
     # sde model
-    @test_throws OscillatorPopulationError load_model("goodwin-general", "sde")
+    model = load_model("goodwin-general", "sde", n_equations=4)
+    @test model.variable_names == ["x1", "x2", "x3", "x4"]
+    @test model.parameter_names == ["K", "n", "σ"]
+    @test model.problem isa SDEProblem
+    @test model.problem.u0 == [0.1, 0.1, 0.1, 0.1]
+    @test model.problem.tspan == (0.0, 10.0)
+    @test model.problem.p == [0.1, 12.0, 0.01]
+    @test model.solver_algorithm == SOSRI()
+    @test model.solver_parameters == (saveat=0.01,)
+    @test isempty(model.input[1])
+    @test model.input[1] isa Matrix
+    @test isempty(model.input[2])
+    @test model.input[2] isa String
+    @test model.output isa Function
 
     # jump model
     @test_throws OscillatorPopulationError load_model("goodwin-general", "jump")

@@ -240,6 +240,18 @@ function _load_goodwin_general(problem_type; n_equations=3)
 
     end
 
+    function noise!(du, u, p, t)
+
+        # Parameters
+        K, n, σ = p
+
+        # Equations
+        for i = 1:n_equations
+            du[i] = σ
+        end
+
+    end
+
     # Common variables for all model types
     tspan = (0.0, 10.0)
     variable_names = ["x$i" for i in 1:n_equations]
@@ -258,9 +270,20 @@ function _load_goodwin_general(problem_type; n_equations=3)
         solver_algorithm = DP5()
         solver_parameters = (saveat=0.01, reltol=1e-9, abstol=1e-9,)
 
+    elseif problem_type == "sde"
+
+        # Create an SDE model
+        push!(parameter_names, "σ")
+        push!(p, 0.01)
+        problem = SDEProblem(model!, noise!, u0, tspan, p)
+
+        # Set solver parameters
+        solver_algorithm = SOSRI()
+        solver_parameters = (saveat=0.01,)
+
     else
 
-        msg = "Problem type `$problem_type` not implemented! Use `ode`."
+        msg = "Problem type `$problem_type` not implemented! Use `ode` or `sde`."
         err = OscillatorPopulationError(msg)
         throw(err)
 
