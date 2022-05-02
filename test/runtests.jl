@@ -1,6 +1,7 @@
 using DataFrames
 using DifferentialEquations
 using OscillatorPopulation
+using StatsBase
 using Test
 
 @testset "data" begin

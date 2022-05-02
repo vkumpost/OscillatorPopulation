@@ -162,3 +162,25 @@
     @test length(df[!, "Time"]) == 579
 
 end
+
+@testset "biolum_zscore_traces" begin
+
+    t = [1., 2, 3, 4]
+    l = [0., 1, 0, 0]
+    x = [1., 2, 3, 2]
+    y = [0., -1, 2, 0]
+    df = DataFrame(
+        Time=t,
+        Light=l,
+        X=x,
+        Y=y
+    )
+    df_1 = deepcopy(df)
+    df_2 = biolum_zscore_traces(df)
+    @test df_1 == df  # original dataframe not changed
+    @test Vector(df_2[:, "Time"]) ≈ t  # time not changed
+    @test Vector(df_2[:, "Light"]) ≈ l  # light not changed
+    @test Vector(df_2[:, "X"]) ≈ zscore(x)
+    @test Vector(df_2[:, "Y"]) ≈ zscore(y)
+
+end
