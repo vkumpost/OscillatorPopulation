@@ -1,6 +1,11 @@
+using DataFrames
 using DifferentialEquations
 using OscillatorPopulation
 using Test
+
+@testset "data" begin
+    include("data_test.jl")
+end
 
 @testset "dummy_model" begin
     include("dummy_model.jl")

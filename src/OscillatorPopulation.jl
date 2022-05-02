@@ -2,6 +2,9 @@
 Package for a simulation of populations of uncpupled oscillators under periodic
     pacing.
 
+**Data Processing**
+- `load_biolum`: Load bioluminescence data.
+
 **Events**
 - `create_events`: Create events represented by a matrix.
 - `create_events_cycle`: Ceate a cycle with specific lengh and period.
@@ -53,9 +56,13 @@ using Statistics
 using StatsBase
 
 import ProgressMeter
+import XLSX
 
 include("FindPeaks/FindPeaks.jl")
 using .FindPeaks
+
+export load_biolum
+include("data.jl")
 
 export create_events, create_events_cycle, events_to_function, plot_events,
     create_callback
