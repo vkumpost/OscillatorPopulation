@@ -251,3 +251,44 @@ end
         callback_type="discrete_02")
 
 end
+
+@testset "detect_events" begin
+
+    # 0s at the beginning and the end
+    t = [0, 1, 2, 3, 4, 5, 6]
+    x = [0, 0, 1, 1, 0, 1, 0]
+    events = detect_events(t, x)
+    @test events ≈ [1.5 3.5; 4.5 5.5]
+
+    # 1s at the beginning and 0s at the end
+    t = [0, 1, 2, 3, 4, 5, 6]
+    x = [1, 1, 0, 1, 0, 1, 0]
+    events = detect_events(t, x)
+    @test events ≈ [0 1.5; 2.5 3.5; 4.5 5.5]
+
+    # 0s at the beginning and 1s at the end
+    t = [0, 1, 2, 3, 4, 5, 6]
+    x = [0, 0, 0, 1, 0, 1, 1]
+    events = detect_events(t, x)
+    @test events ≈ [2.5 3.5; 4.5 6]
+
+    # 1s at the beginning and the end
+    t = [0, 1, 2, 3, 4, 5, 6]
+    x = [1, 0, 1, 1, 0, 1, 1]
+    events = detect_events(t, x)
+    @test events ≈ [0 0.5; 1.5 3.5; 4.5 6]
+
+    # One big event
+    t = [0, 1, 2, 3, 4, 5, 6]
+    x = [1, 1, 1, 1, 1, 1, 1]
+    events = detect_events(t, x)
+    @test events ≈ [0 6]
+
+    # No event
+    t = [0, 1, 2, 3, 4, 5, 6]
+    x = [0, 0, 0, 0, 0, 0, 0]
+    events = detect_events(t, x)
+    @test events isa Matrix
+    @test isempty(events)
+
+end

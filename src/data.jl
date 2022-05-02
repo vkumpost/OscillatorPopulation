@@ -14,6 +14,10 @@ Load data from a bioluminescence experiment.
 **Keyword Arguments**
 - `first_event`: The first event to be considered (default `0`).
 - `last_event`: The last event to be considered (default `Inf`).
+- `first_event_end`: If `true`, use the end instead of the beginning of the
+    `first_event` to align the data (default `false`).
+- `last_event_end`: If `true`, use the end instead of the beginning of the
+    `end_event` to align the data (default `false`).
 - `max_time`: Maximal time from the beginning or the first select event (if
     `first_event` was passed) to be loaded (default `Inf`).
 
@@ -23,7 +27,9 @@ Load data from a bioluminescence experiment.
     lights on and `0` lights off. The remaining columns are the recorded values
     of bioluminescence.
 """
-function load_biolum(plate; first_event=0, last_event=Inf, max_time=Inf)
+function load_biolum(plate; first_event=0, last_event=Inf,
+    first_event_end=false, last_event_end=false, max_time=Inf)
+    # rename max_time to duration
 
     table, header = XLSX.readtable(BIOLUM_LOCAL_PATH, plate)
     float_array = convert(Array{Array{Float64, 1}, 1}, table)
@@ -32,8 +38,12 @@ function load_biolum(plate; first_event=0, last_event=Inf, max_time=Inf)
     # If last_event is passed, remove tailing samples
     if last_event < Inf
 
-        events = _detect_events(df)
-        t_end = events[last_event, 1]
+        events = detect_events(df)
+        if last_event_end
+            t_end = events[last_event, 2]
+        else
+            t_end = events[last_event, 1]
+        end
         idx = df[:, "Time"] .< t_end
         df = df[idx, :]
 
@@ -42,8 +52,12 @@ function load_biolum(plate; first_event=0, last_event=Inf, max_time=Inf)
     # If first_event is passed, remove heading samples
     if first_event > 0
 
-        events = _detect_events(df)
-        t_start = events[first_event, 1]
+        events = detect_events(df)
+        if first_event_end
+            t_start = events[first_event, 2]
+        else
+            t_start = events[first_event, 1]
+        end
         idx = t_start .< df[:, "Time"]
         df = df[idx, :]
         df[:, "Time"] .-= t_start
@@ -64,60 +78,7 @@ end
 
 
 """
-`_detect_events`
-
-Detect events from a DataFrame.
-
-**Arguments**
-- `t`: Vector of timestamps.
-- `x`: A binary vector.
-
-**Returns**
-- `events`: Events matrix representing event starts (first column) and event
-    ends (second column).
-"""
-function _detect_events(t, x)
-
-    # If there is no light recorded, return an empty matrix
-    if all(x .== 0)
-        return Matrix{Float64}(undef, 0, 2)
-    end
-
-    # Iterate vector x and find all event starts (x go from 0 to 1) and all
-    # event ends (x go from 1 to 0).
-    event_starts = Array{Float64, 1}()
-    event_ends = Array{Float64, 1}()
-    for i = 1:length(x)-1
-        if x[i] < 0.5 && x[i+1] > 0.5
-            push!(event_starts, (t[i] + t[i+1])/2)
-        elseif x[i] > 0.5 && x[i+1] < 0.5
-            push!(event_ends, (t[i] + t[i+1])/2)
-        end
-    end
-
-    # Correct special cases for the first and last event
-    if isempty(event_starts)
-        event_starts = [t[1]; event_starts]
-    end
-    if isempty(event_ends)
-        event_ends = [event_ends; t[end]]
-    end
-    if event_ends[1] < event_starts[1]
-        event_starts = [t[1]; event_starts]
-    end
-    if event_ends[end] < event_starts[end]
-        event_ends = [event_ends; t[end]]
-    end
-
-    # Build and return the events matrix
-    events = [event_starts event_ends]
-    return events
-    
-end
-
-
-"""
-`_detect_events`
+`detect_events`
 
 Detect events from a DataFrame.
 
@@ -128,14 +89,14 @@ Detect events from a DataFrame.
 - `events`: Events matrix representing event starts (first column) and event
     ends (second column).
 """
-function _detect_events(df::DataFrame)
+function detect_events(df::DataFrame)
 
     # Extract time and light from DataFrame
     t = df[:, "Time"]
     x = df[:, "Light"]
 
     # Find and returns events
-    events = _detect_events(t, x)
+    events = detect_events(t, x)
     return events
     
 end

@@ -292,3 +292,56 @@ function create_callback(events::Matrix, i; callback_type="continuous")
     return callback
 
 end
+
+
+"""
+`detect_events`
+
+Detect events from a DataFrame.
+
+**Arguments**
+- `t`: Vector of timestamps.
+- `x`: A binary vector representing a square signal.
+
+**Returns**
+- `events`: Events matrix representing event starts (first column) and event
+    ends (second column).
+"""
+function detect_events(t, x)
+
+    # If there are no 1s, return an empty matrix
+    if all(x .== 0)
+        return Matrix{Float64}(undef, 0, 2)
+    end
+
+    # Iterate vector x and find all event starts (x go from 0 to 1) and all
+    # event ends (x go from 1 to 0).
+    event_starts = Array{Float64, 1}()
+    event_ends = Array{Float64, 1}()
+    for i = 1:length(x)-1
+        if x[i] < 0.5 && x[i+1] > 0.5
+            push!(event_starts, (t[i] + t[i+1])/2)
+        elseif x[i] > 0.5 && x[i+1] < 0.5
+            push!(event_ends, (t[i] + t[i+1])/2)
+        end
+    end
+
+    # Correct special cases for the first and last event
+    if isempty(event_starts)
+        event_starts = [t[1]; event_starts]
+    end
+    if isempty(event_ends)
+        event_ends = [event_ends; t[end]]
+    end
+    if event_ends[1] < event_starts[1]
+        event_starts = [t[1]; event_starts]
+    end
+    if event_ends[end] < event_starts[end]
+        event_ends = [event_ends; t[end]]
+    end
+
+    # Build and return the events matrix
+    events = [event_starts event_ends]
+    return events
+    
+end
