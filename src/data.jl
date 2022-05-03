@@ -113,9 +113,6 @@ Apply zscore to the individual traces of bioluminescence data.
 
 **Returns**
 - `df`: The copy of the input dataframe with zscored trajectories.
-
-Apply function `fun` to each column of DataFrame `df` except for columns `Time`
-and `Light`.
 """
 function biolum_zscore_traces(df::DataFrame)
     df = deepcopy(df)
@@ -125,4 +122,28 @@ function biolum_zscore_traces(df::DataFrame)
         end
     end
     return df
+end
+
+
+"""
+`biolum_mean`
+
+Calculate mean and standard deviation of the bioluminescence traces.
+
+**Arguments**
+- `df`: `DataFrame` with the bioluminescence data. First two columns are `Time`
+    and `Light`.
+
+**Returns**
+- `df_mean`: `DataFrame` with columns `Time`, `Light`, `Mean`, and `STD`.
+"""
+function biolum_mean(df::DataFrame)
+    df = deepcopy(df)
+    df_mean = DataFrame(
+        Time = df[:, "Time"],
+        Light = df[:, "Light"],
+        Mean = mean(Matrix(df[:, 3:end]), dims=2)[:, 1],
+        STD = std(Matrix(df[:, 3:end]), dims=2)[:, 1]
+    )
+    return df_mean
 end

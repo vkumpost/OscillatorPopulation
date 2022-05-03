@@ -184,3 +184,27 @@ end
     @test Vector(df_2[:, "Y"]) ≈ zscore(y)
 
 end
+
+@testset "biolum_mean" begin
+
+    t = [1., 2, 3, 4]
+    l = [0., 1, 0, 0]
+    x = [1., 2, 3, 2]
+    y = [0., -1, 2, 0]
+    z = [2., 5, 1, -2]
+    df = DataFrame(
+        Time=t,
+        Light=l,
+        X=x,
+        Y=y,
+        Z=z
+    )
+    df_original = deepcopy(df)
+    df_mean = biolum_mean(df)
+    @test df_original == df  # original dataframe not changed
+    @test Vector(df_mean[:, "Time"]) ≈ t  # time not changed
+    @test Vector(df_mean[:, "Light"]) ≈ l  # light not changed
+    @test Vector(df_mean[:, "Mean"]) ≈ [1, 2, 2, 0]
+    @test Vector(df_mean[:, "STD"]) ≈ [1, 3, 1, 2]
+
+end

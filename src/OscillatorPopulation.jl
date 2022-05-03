@@ -6,6 +6,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `load_biolum`: Load bioluminescence data.
 - `detect_events`: Detect events in the bioluminescence data.
 - `biolum_zscore_traces`: Apply Z-score to bioluminescence traces.
+- `biolum_mean`: Calculate mean of the bioluminescence traces.
 
 **Events**
 - `create_events`: Create events represented by a matrix.
@@ -64,7 +65,7 @@ import XLSX
 include("FindPeaks/FindPeaks.jl")
 using .FindPeaks
 
-export load_biolum, detect_events, biolum_zscore_traces
+export load_biolum, detect_events, biolum_zscore_traces, biolum_mean
 include("data.jl")
 
 export create_events, create_events_cycle, events_to_function, plot_events,
