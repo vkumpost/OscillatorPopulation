@@ -24,6 +24,9 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `estimate_period`: Estimate period.
 - `create_simulation_function`: Generate a simulation function.
 
+**Miscellaneous**
+- `smooth`: Smooth a vector using a moving average filter.
+
 **Model Library**
 - `load_model`: Load a model from the library.
 
@@ -77,6 +80,9 @@ include("exceptions.jl")
 
 export estimate_phase, estimate_period, create_simulation_function
 include("metrics.jl")
+
+export smooth
+include("miscellaneous.jl")
 
 export load_model
 include("model_library.jl")

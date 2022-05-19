@@ -24,6 +24,10 @@ end
     include("metrics_test.jl")
 end
 
+@testset "miscellaneous" begin
+    include("miscellaneous_test.jl")
+end
+
 @testset "model_library" begin
     include("model_library_test.jl")
 end
