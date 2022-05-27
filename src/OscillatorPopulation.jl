@@ -20,7 +20,8 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `OscillatorPopulationError`: A general exeption if something goes wrong.
 
 **Metrics**
-- `estimate_phase`: Estimate entrainment phase.
+- `estimate_phase_array`: Estimate entrainment phase at each cycle.
+- `estimate_phase`: Estimate average entrainment phase.
 - `estimate_period`: Estimate period.
 - `create_simulation_function`: Generate a simulation function.
 
@@ -78,7 +79,7 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export estimate_phase, estimate_period, create_simulation_function
+export estimate_phase_array, estimate_phase, estimate_period, create_simulation_function
 include("metrics.jl")
 
 export smooth

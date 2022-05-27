@@ -1,5 +1,5 @@
 """
-`estimate_phase`
+`estimate_phase_array`
 
 Estimate entrainment phase. The input parameters are expected to represent a
 model output entrained to a periodic square input. The first and last event are
@@ -12,14 +12,18 @@ discarted.
 
 **Keyword Arguments**
 - `normalize`: If `true`, the estimated phase is normalized by the event period.
+- `smooth_span`: Length of the moving average filter (in samples) used to average
+    `x` before the phase is estimated.
 - `show_plots`: If `true`, a figure is generated for a visual control.
 
 **Returns**
-- `phase`: Mean phase calculated over the events cycles.
-- `phase_error`: Standard deviation for the mean phase.
+- `phase_arr`: Array of phases estimated at each cycle of the input data.
 """
-function estimate_phase(t, x, events; normalize=true, show_plots=false)
+function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_plots=false)
 
+    if smooth_span > 1
+        x = smooth(x, span=smooth_span)
+    end
     pr = findpeaks(x, t)
     pks = peakprominences(pr)
     locs = peaklocations(pr)
@@ -39,22 +43,56 @@ function estimate_phase(t, x, events; normalize=true, show_plots=false)
         idx = window_start .< locs .< window_end
         window_locs = locs[idx]
         window_pks = pks[idx]
+
         if isempty(window_pks)
+            # If there are no peaks in the window, set phase to NaN
             push!(phase_arr, NaN)
-            break
+        else
+            # If there are peaks in the window, estimate phase
+            idx_peak = argmax(window_pks)
+            loc = window_locs[idx_peak]
+            phase = loc - window_start
+            if normalize
+                phase /= (window_end - window_start)
+            end
+            push!(phase_arr, phase)
         end
-        idx_peak = argmax(window_pks)
-        loc = window_locs[idx_peak]
-        phase = loc - window_start
-        if normalize
-            phase /= (window_end - window_start)
-        end
-        push!(phase_arr, phase)
 
         if show_plots
             ax.plot(loc, x[pr.indices[idx][idx_peak]], "o", color="red")
         end
     end
+
+    return phase_arr
+
+end
+
+
+"""
+`estimate_phase`
+
+Estimate entrainment phase. The input parameters are expected to represent a
+model output entrained to a periodic square input. The first and last event are
+discarted.
+
+**Arguments**
+- `t`: Time vector.
+- `x`: Data vector.
+- `events`: Events matrix with two columns representing a square signal.
+
+**Keyword Arguments**
+- `normalize`: If `true`, the estimated phase is normalized by the event period.
+- `smooth_span`: Length of the moving average filter (in samples) used to average
+    `x` before the phase is estimated.
+- `show_plots`: If `true`, a figure is generated for a visual control.
+
+**Returns**
+- `phase`: Mean phase calculated over the events cycles.
+- `phase_error`: Standard deviation for the mean phase.
+"""
+function estimate_phase(args...; kwargs...)
+
+    phase_arr = estimate_phase_array(args...; kwargs...)
 
     phase = mean(phase_arr)
     phase_error = std(phase_arr)

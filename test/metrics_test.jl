@@ -1,3 +1,54 @@
+@testset "estimate_phase_array" begin
+    
+    t = 1:20
+    x_original = fill(0.0, length(t))
+    events = [0 2; 4 6; 8 10; 12 14; 16 18]
+
+    # Entrained signal
+    x = copy(x_original)
+    x[7] = 1
+    x[11] = 1
+    x[15] = 1
+
+    phase_arr = estimate_phase_array(t, x, events)
+    @test phase_arr ≈ [0.75, 0.75, 0.75]
+
+    phase_arr = estimate_phase_array(t, x, events; normalize=false)
+    @test phase_arr ≈ [3, 3, 3]
+
+    # Skipped period
+    x = copy(x_original)
+    x[7] = 1
+    x[11] = 0
+    x[15] = 1
+
+    phase_arr = estimate_phase_array(t, x, events)
+    @test phase_arr[1] ≈ 0.75
+    @test isnan(phase_arr[2])
+    @test phase_arr[3] ≈ 0.75
+
+    # Unentrained signal
+    x = copy(x_original)
+    x[5] = 1
+    x[10] = 1
+    x[15] = 1
+
+    phase_arr = estimate_phase_array(t, x, events)
+    @test phase_arr ≈ [0.25, 0.5, 0.75]
+
+    # Multiple peaks
+    x = copy(x_original)
+    x[5] = 1
+    x[7] = 0.5
+    x[10] = 1
+    x[13] = 0.5
+    x[15] = 1
+
+    phase_arr = estimate_phase_array(t, x, events)
+    @test phase_arr ≈ [0.25, 0.5, 0.75]
+
+end
+
 @testset "estimate_phase" begin
     
     t = 1:20
