@@ -163,6 +163,31 @@ end
 
 
 """
+`estimate_winding_number`
+
+Estimate the winding number number around the origin.
+
+**Argument**
+- `x`: Data vector for the x-coordinate.
+- `y`: Data vector for the y-coordinate.
+
+**Returns**
+- `winding_number`: Estimated winding number.
+"""
+function estimate_winding_number(x, y)
+
+    n = length(x)
+    total_angle = 0
+    for i = 1:n-1
+        total_angle += atan(x[i]*y[i+1] - y[i]*x[i+1], x[i]*x[i+1] + y[i]*y[i+1])
+    end
+    winding_number = abs(total_angle / 2π)
+    return winding_number
+
+end
+
+
+"""
 `create_simulation_function`
 
 Generate a function that simulates a model population and apply metrics to the

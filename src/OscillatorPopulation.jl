@@ -23,6 +23,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `estimate_phase_array`: Estimate entrainment phase at each cycle.
 - `estimate_phase`: Estimate average entrainment phase.
 - `estimate_period`: Estimate period.
+- `estimate_winding_number`: Estimate winding number.
 - `create_simulation_function`: Generate a simulation function.
 
 **Miscellaneous**
@@ -79,7 +80,8 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export estimate_phase_array, estimate_phase, estimate_period, create_simulation_function
+export estimate_phase_array, estimate_phase, estimate_period,
+    estimate_winding_number, create_simulation_function
 include("metrics.jl")
 
 export smooth

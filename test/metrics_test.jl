@@ -123,6 +123,34 @@ end
 
 end
 
+@testset "estimate_winding_number" begin
+
+    # Half loop
+    x = [0, 1, 0]
+    y = [-1, 0, 1]
+    winding_number = estimate_winding_number(x, y)
+    @test winding_number ≈ 0.5
+
+    # Half loop in the opposite direction
+    x = [0, -1, 0]
+    y = [-1, 0, 1]
+    winding_number = estimate_winding_number(x, y)
+    @test winding_number ≈ 0.5
+
+    # One loop
+    x = [ 0, 1, 0, -1,  0]
+    y = [-1, 0, 1,  0, -1]
+    winding_number = estimate_winding_number(x, y)
+    @test winding_number ≈ 1
+
+    # One loop around, one outside
+    x = [0, 1, 0, -1,  0,  1,  1,  0,  0]
+    y = [-1, 0, 1, 0, -1, -1, -2, -2, -1]
+    winding_number = estimate_winding_number(x, y)
+    @test winding_number ≈ 1
+
+end
+
 @testset "create_simulation_function" begin
     
     model = create_dummy("ode")
