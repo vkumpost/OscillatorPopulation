@@ -93,6 +93,13 @@ end
     set_output!(model, fun)
     @test model.output == fun
 
+    # Select variable 2 as output
+    model = create_dummy("ode")
+    set_output!(model, 2)
+    sol = solve(model.problem, model.solver_algorithm; model.solver_parameters...)
+    x = model.output(sol)
+    @test x ≈ Matrix(sol[2, :]')
+
 end
 
 @testset "set_solver!" begin

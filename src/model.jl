@@ -178,9 +178,29 @@ Set output for a model.
 **Returns**
 - `model`: In-place edited model.
 """
-function set_output!(model::Model, output)
+function set_output!(model::Model, output::Function)
 
     model.output = output
+    return model
+
+end
+
+
+"""
+`set_output!`
+
+Select output variable for a model.
+
+**Arguments**
+- `model`: `Model`.
+- `index`: Index of the variable that should serve as output.
+
+**Returns**
+- `model`: In-place edited model.
+"""
+function set_output!(model::Model, index)
+
+    model.output = sol -> Matrix(sol[index, :]')
     return model
 
 end
