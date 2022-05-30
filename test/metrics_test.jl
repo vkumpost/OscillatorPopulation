@@ -155,14 +155,15 @@ end
     
     model = create_dummy("ode")
 
-    fun = create_simulation_function(; transient=0.5, variable=2)
+    fun = create_simulation_function(; transient=0.5, variable=2, variable_2=1)
     names = fun()
-    @test names == ["minimum", "maximum", "phase", "phase_error"]
+    @test names == ["minimum", "maximum", "phase", "phase_error", "winding_number"]
     
     properties = fun(model)
     @test properties[1] == 4
     @test properties[2] == 8
     @test isnan(properties[3])
     @test isnan(properties[4])
+    @test 0 < properties[5] < π/2
 
 end

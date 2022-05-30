@@ -201,6 +201,7 @@ Generate a function that simulates a model population and apply metrics to the
     effects (default 0.9).
 - `trajectories`: Number of trajectories in the population (default 1).
 - `variable`: Trajectory that is used to calculate the metrics (default 1).
+- `variable_2`: The second variable for the phase plane (default 2).
 - `show_plots`: Show plots for visual verification (default `false`).
 - `kwargs...`: Keyword arguments passed to `simulate_population`.
 
@@ -210,10 +211,11 @@ Generate a function that simulates a model population and apply metrics to the
     not passed, the function returns the metric names as an array of strings.
 """
 function create_simulation_function(property_names=nothing; transient=0.9,
-    trajectories=1, variable=1, show_plots=false, kwargs...)
+    trajectories=1, variable=1, variable_2=2, show_plots=false, kwargs...)
 
     if isnothing(property_names)
-        property_names = ["minimum", "maximum", "phase", "phase_error"]
+        property_names = ["minimum", "maximum", "phase", "phase_error",
+            "winding_number"]
     end
     n_properties = length(property_names)
 
@@ -232,6 +234,7 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         # Extract time, state, and events
         t = solution.time
         x = solution.mean[:, variable]
+        y = solution.mean[:, variable_2]
         events = solution.events
 
         if show_plots
@@ -270,6 +273,10 @@ function create_simulation_function(property_names=nothing; transient=0.9,
                 end
                 property_values[i_property] = phase_error
 
+            elseif property_name == "winding_number"
+                winding_number = estimate_winding_number(x, y)
+                property_values[i_property] = winding_number
+                
             else
                 msg = "Property `$(property_name)` is not valid!"
                 err = OscillatorPopulationError(msg)
