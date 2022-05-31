@@ -103,6 +103,35 @@ end
 
 end
 
+@testset "estimate_order_parameter" begin
+    
+    # Throw error if the phase is outside the allowed interval [0, 1]
+    phase_array = [0.1, -0.1, 0.5]
+    @test_throws OscillatorPopulationError estimate_order_parameter(phase_array)
+
+    phase_array = [0.1, 0.5, 1.5]
+    @test_throws OscillatorPopulationError estimate_order_parameter(phase_array)
+
+    # Coherent population
+    phase_array = [0.2, 0.2, 0.2]
+    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+    @test phase_coherence ≈ 1
+    @test collective_phase ≈ 0.2
+
+    # Incoherent population
+    phase_array = [0.0, 0.25, 0.5, 0.75]
+    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+    @test phase_coherence < 1e-10
+
+    # Slightly desynchronized population
+    phase_array = [0.2, 0.3, 0.4]
+    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+    @test phase_coherence ≈ 0.872677996249965
+    @test collective_phase ≈ 0.3
+
+end
+
+
 @testset "estimate_period" begin
 
     t = 0:0.01:20

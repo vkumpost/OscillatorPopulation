@@ -17,7 +17,7 @@ discarted.
 - `show_plots`: If `true`, a figure is generated for a visual control.
 
 **Returns**
-- `phase_arr`: Array of phases estimated at each cycle of the input data.
+- `phase_array`: Array of phases estimated at each cycle of the input data.
 """
 function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_plots=false)
 
@@ -36,7 +36,7 @@ function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_
     end
 
     n_events = size(events, 1)
-    phase_arr = Float64[]
+    phase_array = Float64[]
     for i_event = 2:(n_events-1)
         window_start = events[i_event, 1]
         window_end = events[i_event+1, 1]
@@ -46,7 +46,7 @@ function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_
 
         if isempty(window_pks)
             # If there are no peaks in the window, set phase to NaN
-            push!(phase_arr, NaN)
+            push!(phase_array, NaN)
         else
             # If there are peaks in the window, estimate phase
             idx_peak = argmax(window_pks)
@@ -55,7 +55,7 @@ function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_
             if normalize
                 phase /= (window_end - window_start)
             end
-            push!(phase_arr, phase)
+            push!(phase_array, phase)
         end
 
         if show_plots
@@ -63,7 +63,7 @@ function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_
         end
     end
 
-    return phase_arr
+    return phase_array
 
 end
 
@@ -98,6 +98,43 @@ function estimate_phase(args...; kwargs...)
     phase_error = std(phase_arr)
 
     return phase, phase_error
+
+end
+
+
+"""
+`estimate_order_parameter`
+
+Estimate period of a signal based on its autocorrelation function.
+
+**Argument**
+- `phase_array`: Array of phases normalized to interval [0, 1].
+
+**Returns**
+- `phase_coherence`: A number between 0 (no coherence) to 1 (full coherence).
+- `collective_phase`: A number between 0 and 1 indicating the average phase.
+"""
+function estimate_order_parameter(phase_array)
+
+    if minimum(phase_array) < 0 || maximum(phase_array) > 1
+        msg = "Phase must be on interval [0, 1]!"
+        err = OscillatorPopulationError(msg)
+        throw(err)
+    end
+
+    n = length(phase_array)
+    complex_order_parameter = 0im
+    for phase in phase_array
+        complex_order_parameter += exp(2π * phase * im)
+    end
+    complex_order_parameter /= n
+    phase_coherence = abs(complex_order_parameter)
+    collective_phase = angle(complex_order_parameter)  # ∈ [-π, π]
+    if collective_phase < 0  # map from [-π, 0] on [π, 2π]
+        collective_phase += 2π
+    end
+    collective_phase /= 2π  # map from [0, 2π] on [0, 1]
+    return phase_coherence, collective_phase
 
 end
 
