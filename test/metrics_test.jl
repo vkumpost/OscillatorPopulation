@@ -151,10 +151,25 @@ end
 
 end
 
+@testset "estimate_winding_number_period" begin
+    
+    # Half loop
+    x = [0, 1, 0]
+    y = [-1, 0, 1]
+    period = estimate_winding_number_period(x, y, 0.5)
+    @test period ≈ 1
+    period = estimate_winding_number_period(x, y, 2)
+    @test period ≈ 4
+    period = estimate_winding_number_period(x, y, 0.25)
+    @test period ≈ 0.5
+
+end
+
 @testset "create_simulation_function" begin
     
     model = create_dummy("ode")
-
+    events = create_events_cycle(10, 0.5)
+    set_input!(model, events, "c")
     fun = create_simulation_function(; transient=0.5, variable=2, variable_2=1)
     names = fun()
     @test names == ["minimum", "maximum", "phase", "phase_error", "winding_number"]
@@ -164,6 +179,6 @@ end
     @test properties[2] == 8
     @test isnan(properties[3])
     @test isnan(properties[4])
-    @test 0 < properties[5] < π/2
+    @test 0 < properties[5]
 
 end

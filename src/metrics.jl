@@ -165,7 +165,7 @@ end
 """
 `estimate_winding_number`
 
-Estimate the winding number number around the origin.
+Estimate the winding number around the origin.
 
 **Argument**
 - `x`: Data vector for the x-coordinate.
@@ -183,6 +183,28 @@ function estimate_winding_number(x, y)
     end
     winding_number = abs(total_angle / 2π)
     return winding_number
+
+end
+
+
+"""
+`estimate_winding_number_period`
+
+Estimate the period based on the winding number.
+
+**Argument**
+- `x`: Data vector for the x-coordinate.
+- `y`: Data vector for the y-coordinate.
+- `time_duration`: Time duration of `x` and `y`.
+
+**Returns**
+- `period`: Estimated period.
+"""
+function estimate_winding_number_period(x, y, time_duration)
+
+    winding_number = estimate_winding_number(x, y)
+    period = time_duration / winding_number
+    return period
 
 end
 
@@ -236,6 +258,8 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         x = solution.mean[:, variable]
         y = solution.mean[:, variable_2]
         events = solution.events
+        time_duration = maximum(t) - minimum(t)
+        input_period = events[3, 1] - events[2, 1]
 
         if show_plots
             _, ax = subplots()
@@ -274,8 +298,8 @@ function create_simulation_function(property_names=nothing; transient=0.9,
                 property_values[i_property] = phase_error
 
             elseif property_name == "winding_number"
-                winding_number = estimate_winding_number(x, y)
-                property_values[i_property] = winding_number
+                winding_number_period = estimate_winding_number_period(x, y, time_duration)
+                property_values[i_property] = input_period / winding_number_period
                 
             else
                 msg = "Property `$(property_name)` is not valid!"
