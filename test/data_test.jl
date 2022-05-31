@@ -208,3 +208,10 @@ end
     @test Vector(df_mean[:, "STD"]) ≈ [1, 3, 1, 2]
 
 end
+
+@testset "save_data and load_data" begin
+
+    @test save_data isa Function
+    @test load_data isa Function
+
+end

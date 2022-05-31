@@ -147,3 +147,52 @@ function biolum_mean(df::DataFrame)
     )
     return df_mean
 end
+
+
+"""
+`save_data`
+
+Save a dataframe as a csv file.
+
+**Arguments**
+- `df`: `DataFrame`.
+- `filename`: Path to the csv file.
+
+**Keyword Arguments**
+- `force`: If `true`, `filename` will be overwritten, if already exists.
+"""
+function save_data(df::DataFrame, filename; force=false)
+
+    # Check if the file already exists
+    if !force && isfile(filename)
+        msg = "File $(filename) already exists!"
+        err = OscillatorPopulationError(msg)
+        throw(err)
+    end
+
+    # Create necessary directories
+    dir, _ = splitdir(filename)
+    if !isdir(dir)
+        mkpath(dir)
+    end
+
+    # Write the dataframe into the csv file
+    CSV.write(filename, df)
+
+end
+
+
+"""
+`load_data`
+
+Load a dataframe from a csv file.
+
+**Arguments**
+- `filename`: Path to the csv file.
+"""
+function load_data(filename)
+
+    df = DataFrame(CSV.File(filename))
+    return df
+
+end
