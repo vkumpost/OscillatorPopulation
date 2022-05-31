@@ -28,3 +28,7 @@ LocalPreferences.toml
 
 Code.lnk
 tmp_test.jl
+/figures/
+/outputs/
+/scripts/
+to-do.txt
