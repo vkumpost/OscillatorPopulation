@@ -69,40 +69,6 @@ end
 
 
 """
-`estimate_phase`
-
-Estimate entrainment phase. The input parameters are expected to represent a
-model output entrained to a periodic square input. The first and last event are
-discarted.
-
-**Arguments**
-- `t`: Time vector.
-- `x`: Data vector.
-- `events`: Events matrix with two columns representing a square signal.
-
-**Keyword Arguments**
-- `normalize`: If `true`, the estimated phase is normalized by the event period.
-- `smooth_span`: Length of the moving average filter (in samples) used to average
-    `x` before the phase is estimated.
-- `show_plots`: If `true`, a figure is generated for a visual control.
-
-**Returns**
-- `phase`: Mean phase calculated over the events cycles.
-- `phase_error`: Standard deviation for the mean phase.
-"""
-function estimate_phase(args...; kwargs...)
-
-    phase_arr = estimate_phase_array(args...; kwargs...)
-
-    phase = mean(phase_arr)
-    phase_error = std(phase_arr)
-
-    return phase, phase_error
-
-end
-
-
-"""
 `estimate_order_parameter`
 
 Estimate period of a signal based on its autocorrelation function.
@@ -273,8 +239,8 @@ function create_simulation_function(property_names=nothing; transient=0.9,
     trajectories=1, variable=1, variable_2=2, show_plots=false, kwargs...)
 
     if isnothing(property_names)
-        property_names = ["minimum", "maximum", "phase", "phase_error",
-            "winding_number"]
+        property_names = ["minimum", "maximum", "winding_number",
+            "phase_coherence", "collective_phase"]
     end
     n_properties = length(property_names)
 
@@ -309,8 +275,8 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         property_values = fill(NaN, n_properties)
 
         # Variables to save properties, so they do not be estimated repeatedly
-        phase = nothing
-        phase_error = nothing
+        phase_coherence = nothing
+        collective_phase = nothing
 
         # Iterate property names
         for (i_property, property_name) in enumerate(property_names)
@@ -322,22 +288,24 @@ function create_simulation_function(property_names=nothing; transient=0.9,
             elseif property_name == "maximum"
                 property_values[i_property] = maximum(x)
 
-            elseif property_name == "phase"
-                if isnothing(phase)
-                    phase, phase_error = estimate_phase(t, x, events; show_plots=show_plots)
-                end
-                property_values[i_property] = phase
-
-            elseif property_name == "phase_error"
-                if isnothing(phase_error)
-                    phase, phase_error = estimate_phase(t, x, events; show_plots=show_plots)
-                end
-                property_values[i_property] = phase_error
-
             elseif property_name == "winding_number"
                 winding_number_period = estimate_winding_number_period(x, y, time_duration)
                 property_values[i_property] = input_period / winding_number_period
+
+            elseif property_name == "phase_coherence"
+                if isnothing(phase_coherence)
+                    phase_array = estimate_phase_array(t, x, events)
+                    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+                end
+                property_values[i_property] = phase_coherence
                 
+            elseif property_name == "collective_phase"
+                if isnothing(collective_phase)
+                    phase_array = estimate_phase_array(t, x, events)
+                    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+                end
+                property_values[i_property] = collective_phase
+
             else
                 msg = "Property `$(property_name)` is not valid!"
                 err = OscillatorPopulationError(msg)
@@ -347,6 +315,7 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         end
 
         return property_values
+
     end
 
     return simulation_function
