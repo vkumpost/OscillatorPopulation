@@ -289,7 +289,8 @@ Plot Arnold tongue or onion.
 **Keyword Arguments**
 - `property_name`: Name of the column to plot.
 - `error_name`: Column with error values.
-- `max_error`: Maximal allowed error for `error_name` column.
+- `error_range`: Minimal and maximal value, specified as an array, allowed for
+    `error_name` column.
 - `fixed_value`: Fixed value for the third dimension of the "Arnold" space.
 - `color_limits`: Color limits specified as `[cmin, cmax]`.
 - `show_colorbar`: If `true`, show a colorbar.
@@ -297,7 +298,7 @@ Plot Arnold tongue or onion.
 - `ax`: PyPlot axes.
 """
 function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_name=nothing,
-    max_error=nothing, fixed_value=nothing, color_limits=nothing,
+    error_range=nothing, fixed_value=nothing, color_limits=nothing,
     show_colorbar=true, colorbar_label=nothing, ax=gca())
 
     if type == "tongue"
@@ -333,7 +334,7 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
     # Estimate which points are entrained
     if !isnothing(error_name)
         error_matrix = reshape(df[:, error_name], n_y_values, n_x_values)
-        idx = error_matrix .<= max_error
+        idx = error_range[1] .<= error_matrix .<= error_range[2]
     else
         idx = fill(true, n_y_values, n_x_values)
     end
