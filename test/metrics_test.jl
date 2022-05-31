@@ -103,26 +103,34 @@ end
     # Half loop
     x = [0, 1, 0]
     y = [-1, 0, 1]
-    winding_number = estimate_winding_number(x, y)
+    winding_number = estimate_winding_number(x, y; remove_mean=false)
     @test winding_number ≈ 0.5
 
     # Half loop in the opposite direction
     x = [0, -1, 0]
     y = [-1, 0, 1]
-    winding_number = estimate_winding_number(x, y)
+    winding_number = estimate_winding_number(x, y; remove_mean=false)
     @test winding_number ≈ 0.5
 
     # One loop
     x = [ 0, 1, 0, -1,  0]
     y = [-1, 0, 1,  0, -1]
-    winding_number = estimate_winding_number(x, y)
+    winding_number = estimate_winding_number(x, y; remove_mean=false)
     @test winding_number ≈ 1
 
     # One loop around, one outside
     x = [0, 1, 0, -1,  0,  1,  1,  0,  0]
     y = [-1, 0, 1, 0, -1, -1, -2, -2, -1]
-    winding_number = estimate_winding_number(x, y)
+    winding_number = estimate_winding_number(x, y; remove_mean=false)
     @test winding_number ≈ 1
+
+    # remove_mean option
+    x = [ 0, 1, 0, -1,  0] .+ 10
+    y = [-0.5, 0, 1,  0, -0.5]
+    winding_number = estimate_winding_number(x, y; remove_mean=true)
+    @test winding_number ≈ 1
+    winding_number = estimate_winding_number(x, y; remove_mean=false)
+    @test winding_number < 1e-10
 
 end
 
@@ -131,12 +139,20 @@ end
     # Half loop
     x = [0, 1, 0]
     y = [-1, 0, 1]
-    period = estimate_winding_number_period(x, y, 0.5)
+    period = estimate_winding_number_period(x, y, 0.5; remove_mean=false)
     @test period ≈ 1
-    period = estimate_winding_number_period(x, y, 2)
+    period = estimate_winding_number_period(x, y, 2; remove_mean=false)
     @test period ≈ 4
-    period = estimate_winding_number_period(x, y, 0.25)
+    period = estimate_winding_number_period(x, y, 0.25; remove_mean=false)
     @test period ≈ 0.5
+
+    # remove_mean option
+    x = [ 0, 1, 0, -1,  0] .+ 10
+    y = [-0.5, 0, 1,  0, -0.5]
+    period = estimate_winding_number_period(x, y, 2; remove_mean=true)
+    @test period ≈ 2
+    period = estimate_winding_number_period(x, y, 2; remove_mean=false)
+    @test period > 2
 
 end
 

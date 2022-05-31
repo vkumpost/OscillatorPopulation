@@ -174,11 +174,19 @@ Estimate the winding number around the origin.
 - `x`: Data vector for the x-coordinate.
 - `y`: Data vector for the y-coordinate.
 
+**Keyword Argument**
+- `remove_mean`: Subtract mean from `x` and `y` before estimating the winding
+    number. Default value is `true`.
+
 **Returns**
 - `winding_number`: Estimated winding number.
 """
-function estimate_winding_number(x, y)
+function estimate_winding_number(x, y; remove_mean=true)
 
+    if remove_mean
+        x = x .- mean(x)
+        y = y .- mean(y)
+    end
     n = length(x)
     total_angle = 0
     for i = 1:n-1
@@ -193,19 +201,23 @@ end
 """
 `estimate_winding_number_period`
 
-Estimate the period based on the winding number.
+Estimate period based on the winding number.
 
 **Argument**
 - `x`: Data vector for the x-coordinate.
 - `y`: Data vector for the y-coordinate.
 - `time_duration`: Time duration of `x` and `y`.
 
+**Keyword Argument**
+- `remove_mean`: Subtract mean from `x` and `y` before estimating the winding
+    number. Default value is `true`.
+
 **Returns**
 - `period`: Estimated period.
 """
-function estimate_winding_number_period(x, y, time_duration)
+function estimate_winding_number_period(x, y, time_duration; remove_mean=true)
 
-    winding_number = estimate_winding_number(x, y)
+    winding_number = estimate_winding_number(x, y; remove_mean=remove_mean)
     period = time_duration / winding_number
     return period
 
