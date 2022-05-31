@@ -119,6 +119,8 @@ Scan parameters of a model.
     ```
 
 **Keyword Arguments**
+- `catch_errors`: If `true`, errors from the `simulation_function` will be catched
+    and parameters set to `NaN` for the corresponding entry.
 - `show_progress`: If `true`, show a progress bar in the terminal.
 
 **Returns**
@@ -127,7 +129,7 @@ Scan parameters of a model.
     parameters.
 """
 function scan(model::Model, parameters::Vector, simulation_function::Function;
-    show_progress::Bool=false)
+    catch_errors=true, show_progress::Bool=false)
 
     # Get values from the parameter dictionary
     parameter_names = [x[1] for x in parameters]
@@ -156,11 +158,17 @@ function scan(model::Model, parameters::Vector, simulation_function::Function;
         # Set model parameters
         set_parameter!(model2, parameter_names, parameter_value_combinations[i, :])
 
-        # Evaluate the sumary function
-        simulation_summary = simulation_function(model2)
-
-        # Save the model summary to the overall matrix
-        scan_summary[i, :] = simulation_summary
+        # Calculate parameters for the simulation
+        try
+            scan_summary[i, :] = simulation_function(model2)
+        catch err
+            if !catch_errors
+                @warn "An error occured for $(parameter_names) = $(parameter_values)"
+                throw(err)
+            else
+                scan_summary[i, :] .= NaN
+            end
+        end
 
         # Update progress bar
         if show_progress
@@ -202,18 +210,19 @@ Estimate arnold tongue and/or onion.
 - `input_amplitudes`: Input amplitudes to scan.
 - `input_periods`: Input periods to scan.
 - `input_duty_cycles`: Input duty cycles to scan.
-- `input_parameter_name`: Name of the parameter that controls the input amplitude.
-- `show_progress`: If true, show progress in the terminal.
+- `input_parameter`: Name of the parameter that controls the input amplitude.
+- `catch_errors`: If `true`, errors from the `simulation_function` will be catched
+    and parameters set to `NaN` for the corresponding entry.
+- `show_progress`: If `true`, show progress in the terminal.
 
 **Returns**
 - `df`: Dataframe with results. First columns correspond to the input amplitude,
     period, and duty cycle. The following columns correspond to the values
-    returned by `simulation_function` for the corresponding
-    parameters.
+    returned by `simulation_function` for the corresponding parameters.
 """
 function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
     input_periods=[1.0], input_duty_cycles=[0.5], input_parameter="I",
-    show_progress=false)
+    catch_errors=true, show_progress=false)
 
     # Find all possible combinations of input amplitudes, periods and duty cycles
     vectors = [input_amplitudes, input_periods, input_duty_cycles]
@@ -251,8 +260,12 @@ function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
         try
             scan_results[i, :] = simulation_function(model2)
         catch err
-            @warn "An error occured for [I, T, D] = [$input_amplitude, $input_period, $input_duty_cycle]"
-            throw(err)
+            if !catch_errors
+                @warn "An error occured for [I, T, D] = [$input_amplitude, $input_period, $input_duty_cycle]"
+                throw(err)
+            else
+                scan_results[i, :] .= NaN
+            end
         end
 
         # Update progress bar
