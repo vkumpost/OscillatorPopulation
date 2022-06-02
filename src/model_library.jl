@@ -9,6 +9,7 @@ Load a model from the library.
     - `goodwin`
     - `goodwin-general` (kwargs: `n_equations`)
     - `van-der-pol`
+    - `kim-forger`
 
 **Optional Arguments**
 - `problem_type`: "ode", "sde", or "jump".
@@ -23,6 +24,8 @@ function load_model(model_name::String, problem_type::String="ode"; kwargs...)
         model = _load_goodwin_general(problem_type; kwargs...)
     elseif model_name == "van-der-pol"
         model = _load_van_der_pol(problem_type)
+    elseif model_name == "kim-forger"
+        model = _load_kim_forger(problem_type)
     else
         err = OscillatorPopulationError("`$model_name` is not in the model library!")
         throw(err)
@@ -87,7 +90,7 @@ function _load_amplitude_phase(problem_type)
     
         # Set solver parameters
         solver_algorithm = DP5()
-        solver_parameters = (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+        solver_parameters = (saveat=0.01,)
 
     elseif problem_type == "sde"
 
@@ -184,7 +187,7 @@ function _load_goodwin(problem_type)
     
         # Set solver parameters
         solver_algorithm = DP5()
-        solver_parameters = (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+        solver_parameters = (saveat=0.01,)
 
     elseif problem_type == "sde"
 
@@ -268,7 +271,7 @@ function _load_goodwin_general(problem_type; n_equations=3)
     
         # Set solver parameters
         solver_algorithm = DP5()
-        solver_parameters = (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+        solver_parameters = (saveat=0.01,)
 
     elseif problem_type == "sde"
 
@@ -350,7 +353,7 @@ function _load_van_der_pol(problem_type)
     
         # Set solver parameters
         solver_algorithm = DP5()
-        solver_parameters = (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+        solver_parameters = (saveat=0.01,)
 
     elseif problem_type == "sde"
 
@@ -377,5 +380,108 @@ function _load_van_der_pol(problem_type)
         solver_parameters, input, output)
         
     return model
+
+end
+
+
+"""
+`_load_kim_forger`
+
+Load the Van der Pol model.
+
+**References**
+- Jae Kyoung Kim, Daniel B. Forger. "A mechanism for robust circadian
+    timekeeping via stoichiometric balance." Molecular Systems Biology 8 (2012).
+    https://doi.org/10.1038/msb.2012.62
+"""
+function _load_kim_forger(problem_type)
+
+    function model!(du, u, p, t)
+
+        # Variables
+        x, y, z = u
+        x = max(0, x)
+        y = max(0, y)
+        z = max(0, z)
+        
+        # Parameters
+        A, I = p
+        
+        # Equations
+        du[1] = max(0, 1 - z/A) - x + I
+        du[2] = x - y
+        du[3] = y - z
+
+    end
+
+    function noise!(du, u, p, t)
+
+        # Variables
+        x, y, z = u
+        x = max(0, x)
+        y = max(0, y)
+        z = max(0, z)
+
+        # Parameters
+        A, I, σ = p
+
+        # Equations
+        du[1, 1] = σ * sqrt(max(0, 1 - z/A))
+        du[1, 2] = σ * sqrt(x)
+        du[1, 3] = σ * sqrt(I)
+        du[2, 4] = σ * sqrt(x)
+        du[2, 5] = σ * sqrt(y)
+        du[3, 6] = σ * sqrt(y)
+        du[3, 7] = σ * sqrt(z)
+
+    end
+
+    # Common variables for all model types
+    tspan = (0.0, 100.0)
+    variable_names = ["x", "y", "z"]
+    parameter_names = ["A", "I"]
+    p = [0.1, 0.0]
+    u0 = [0.1, 0.1, 0.1]
+    input = (Matrix{Float64}(undef, 0, 0), "")
+    output = sol -> Matrix(sol[:, :]')
+    positive_domain_callback = PositiveDomain(u0; save=false)
+        
+    if problem_type == "ode"
+        
+        # Create an ODE problem
+        problem = ODEProblem(model!, u0, tspan, p; callback=positive_domain_callback)
+    
+        # Set solver parameters
+        solver_algorithm = DP5()
+        solver_parameters = (saveat=0.01, force_dtmin=true,)
+
+    elseif problem_type == "sde"
+
+        # Create an SDE model
+        push!(parameter_names, "σ")
+        push!(p, 0.1)
+        noise_rate_prototype = zeros(3, 7)
+        problem = SDEProblem(model!, noise!, u0, tspan, p;
+            noise_rate_prototype=noise_rate_prototype,
+            callback=positive_domain_callback
+        )
+
+        # Set solver parameters
+        solver_algorithm = LambaEM()
+        solver_parameters = (saveat=0.01, force_dtmin=true,)
+
+    else
+
+        msg = "Problem type `$problem_type` not implemented! Use `ode` or `sde`."
+        err = OscillatorPopulationError(msg)
+        throw(err)
+
+    end
+
+    model = Model(variable_names, parameter_names, problem, solver_algorithm,
+        solver_parameters, input, output)
+        
+    return model
+
 
 end

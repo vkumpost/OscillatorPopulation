@@ -15,7 +15,7 @@ end
     @test model.problem.tspan == (0.0, 10.0)
     @test model.problem.p == [0.5, 2.0, 1.0, 0.0]
     @test model.solver_algorithm == DP5()
-    @test model.solver_parameters == (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+    @test model.solver_parameters == (saveat=0.01,)
     @test isempty(model.input[1])
     @test model.input[1] isa Matrix
     @test isempty(model.input[2])
@@ -54,7 +54,7 @@ end
     @test model.problem.tspan == (0.0, 100.0)
     @test model.problem.p == [1.0, 10.0, 5.0, 5.0, 5.0, 0.5, 0.5, 0.5]
     @test model.solver_algorithm == DP5()
-    @test model.solver_parameters == (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+    @test model.solver_parameters == (saveat=0.01,)
     @test isempty(model.input[1])
     @test model.input[1] isa Matrix
     @test isempty(model.input[2])
@@ -93,7 +93,7 @@ end
     @test model.problem.tspan == (0.0, 10.0)
     @test model.problem.p == [0.1, 12.0]
     @test model.solver_algorithm == DP5()
-    @test model.solver_parameters == (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+    @test model.solver_parameters == (saveat=0.01,)
     @test isempty(model.input[1])
     @test model.input[1] isa Matrix
     @test isempty(model.input[2])
@@ -108,7 +108,7 @@ end
     @test model.problem.tspan == (0.0, 10.0)
     @test model.problem.p == [0.1, 12.0]
     @test model.solver_algorithm == DP5()
-    @test model.solver_parameters == (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+    @test model.solver_parameters == (saveat=0.01,)
     @test isempty(model.input[1])
     @test model.input[1] isa Matrix
     @test isempty(model.input[2])
@@ -147,7 +147,7 @@ end
     @test model.problem.tspan == (0.0, 100.0)
     @test model.problem.p == [10.0, 2.0, 0.0]
     @test model.solver_algorithm == DP5()
-    @test model.solver_parameters == (saveat=0.01, reltol=1e-9, abstol=1e-9,)
+    @test model.solver_parameters == (saveat=0.01,)
     @test isempty(model.input[1])
     @test model.input[1] isa Matrix
     @test isempty(model.input[2])
