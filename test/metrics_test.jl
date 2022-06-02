@@ -1,3 +1,19 @@
+@testset "cmean" begin
+
+    x = [-2, -1, 0, 1, 2, 3]
+    m = cmean(x)
+    @test abs(m) < 1e-15
+
+    x = [0.25, 0.75, 1.0, 0.0]
+    m = cmean(x)
+    @test abs(m) < 1e-15
+
+    x = [-0.5, 0.5, 1.5]
+    m = cmean(x)
+    @test abs(m - 0.5) < 1e-15
+
+end
+
 @testset "estimate_phase_array" begin
     
     t = 1:20
@@ -47,6 +63,32 @@
     phase_arr = estimate_phase_array(t, x, events)
     @test phase_arr ≈ [0.25, 0.5, 0.75]
 
+    # Pass a matrix
+    X = fill(0.0, length(t), 4)
+    X[7, 1] = 1
+    X[11, 1] = 1
+    X[15, 1] = 1
+    X[7, 2] = 1
+    X[11, 2] = 0
+    X[15, 2] = 1
+    X[5, 3] = 1
+    X[7, 3] = 0.5
+    X[10, 3] = 1
+    X[13, 3] = 0.5
+    X[15, 3] = 1
+    X[5, 4] = 1
+    X[7, 4] = 0.5
+    X[10, 4] = 1
+    X[13, 4] = 0.5
+    X[15, 4] = 1
+    phase_arr = estimate_phase_array(t, X, events)
+    phase_arr[isnan.(phase_arr)] .= -0.1  # replace NaNs for easier test evaluation
+    @test phase_arr ≈ [
+        0.75 0.75 0.25 0.25;
+        0.75 -0.1 0.50 0.50;
+        0.75 0.75 0.75 0.75
+    ]
+
 end
 
 @testset "estimate_order_parameter" begin
@@ -74,6 +116,15 @@ end
     phase_coherence, collective_phase = estimate_order_parameter(phase_array)
     @test phase_coherence ≈ 0.872677996249965
     @test collective_phase ≈ 0.3
+
+    # Matrix input
+    phase_array = [
+        0.2 0.2 0.2;
+        0.2 0.3 0.4
+    ]
+    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+    @test phase_coherence ≈ (0.872677996249965 + 1)/2
+    @test collective_phase ≈ 0.25
 
 end
 

@@ -1,4 +1,25 @@
 """
+`cmean`
+
+Compute circular mean of an array.
+
+**Arguments**
+- `x`: Array of angles normalized to the interval [0, 1].
+
+**Returns**
+- `m`: Circular mean of `x`.
+"""
+function cmean(x)
+    x_rad = x * 2π
+    S = mean(sin.(x_rad))
+    C = mean(cos.(x_rad))
+    m_rad = atan(S, C) 
+    m = m_rad / 2π
+    return m
+end
+
+
+"""
 `estimate_phase_array`
 
 Estimate entrainment phase. The input parameters are expected to represent a
@@ -7,7 +28,7 @@ discarted.
 
 **Arguments**
 - `t`: Time vector.
-- `x`: Data vector.
+- `x`: Data vector or matrix, where each column represents one data vector.
 - `events`: Events matrix with two columns representing a square signal.
 
 **Keyword Arguments**
@@ -17,7 +38,9 @@ discarted.
 - `show_plots`: If `true`, a figure is generated for a visual control.
 
 **Returns**
-- `phase_array`: Array of phases estimated at each cycle of the input data.
+- `phase_array`: Array of phases estimated at each cycle of the input data. If 
+    `x` is a matrix, `phase_array` is also a matrix, where each column contains
+    estimated phases for the individual data vectors.
 """
 function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_plots=false)
 
@@ -68,6 +91,22 @@ function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_
 end
 
 
+function estimate_phase_array(t, X::Matrix, events; kwargs...)
+
+    # Call estimate_phase_array on each column of a matrix
+    n_trajectories = size(X, 2)
+    n_events = size(events, 1) - 2
+    phase_matrix = fill(NaN, n_events, n_trajectories)
+    for i_trajectory = 1:n_trajectories
+        x = X[:, i_trajectory]
+        phase_array = estimate_phase_array(t, x, events; kwargs...)
+        phase_matrix[:, i_trajectory] = phase_array
+    end
+    return phase_matrix
+
+end
+
+
 """
 `estimate_order_parameter`
 
@@ -78,7 +117,11 @@ Estimate period of a signal based on its autocorrelation function.
 
 **Returns**
 - `phase_coherence`: A number between 0 (no coherence) to 1 (full coherence).
+    If `phase_array` is a matrix, phase coherence is calculated as a mean of
+    the phase coherences calculated from individual rows.
 - `collective_phase`: A number between 0 and 1 indicating the average phase.
+    If `phase_array` is a matrix, collective phase is circular mean of the
+    indivudal phases.
 """
 function estimate_order_parameter(phase_array)
 
@@ -101,6 +144,25 @@ function estimate_order_parameter(phase_array)
     end
     collective_phase /= 2π  # map from [0, 2π] on [0, 1]
     return phase_coherence, collective_phase
+
+end
+
+
+function estimate_order_parameter(phase_matrix::Matrix)
+
+    # Call estimate_order_parameter on each row of a matrix
+    n = size(phase_matrix, 1)
+    phase_coherence_arr = fill(NaN, n)
+    collective_phase_arr = fill(NaN, n)
+    for i = 1:n
+        phase_array = phase_matrix[i, :]
+        phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+        phase_coherence_arr[i] = phase_coherence
+        collective_phase_arr[i] = collective_phase
+    end
+    phase_coherence_mean = mean(phase_coherence_arr)
+    collective_phase_mean = cmean(collective_phase_arr)
+    return phase_coherence_mean, collective_phase_mean
 
 end
 
