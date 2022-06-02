@@ -458,6 +458,7 @@ function print_info(model::Model)
         println("Jump Model")
         prob = model.problem.prob
     end
+    println("  tspan = $(prob.tspan)")
 
     println("Solver\n  $(model.solver_algorithm)")
     println("Solver parameters")
