@@ -177,7 +177,12 @@ function save_data(df::DataFrame, filename; force=false)
     end
 
     # Write the dataframe into the csv file
-    CSV.write(filename, df)
+    matrix = Matrix(df)
+    head = names(df)
+    csv_content = [reshape(head, 1, length(head)); matrix]
+    open(filename, "w") do io
+        writedlm(io, csv_content, ',')
+    end
 
 end
 
@@ -192,7 +197,8 @@ Load a dataframe from a csv file.
 """
 function load_data(filename)
 
-    df = DataFrame(CSV.File(filename))
+    matrix, head = readdlm(filename, ',', header=true)
+    df = DataFrame(matrix, vec(head))
     return df
 
 end

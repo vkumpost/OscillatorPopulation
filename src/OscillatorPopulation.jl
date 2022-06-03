@@ -62,13 +62,13 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 module OscillatorPopulation
 
 using DataFrames
+using DelimitedFiles
 using DifferentialEquations
 using PyPlot
 using Random
 using Statistics
 using StatsBase
 
-import CSV
 import ProgressMeter
 import XLSX
 
