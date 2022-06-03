@@ -214,14 +214,15 @@ end
     set_input!(model, events, "c")
     fun = create_simulation_function(; transient=0.5, variable=2, variable_2=1)
     names = fun()
-    @test names == ["minimum", "maximum", "winding_number", "phase_coherence",
-        "collective_phase"]
+    @test names == ["minimum", "maximum", "amplitude", "winding_number",
+        "phase_coherence", "collective_phase"]
     
     properties = fun(model)
     @test properties[1] == 4
     @test properties[2] == 8
-    @test 0 < properties[3]
-    @test isnan(properties[4])
+    @test properties[3] == 4
+    @test 0 < properties[4]
     @test isnan(properties[5])
+    @test isnan(properties[6])
 
 end
