@@ -126,6 +126,21 @@ end
     @test phase_coherence ≈ (0.872677996249965 + 1)/2
     @test collective_phase ≈ 0.25
 
+    # NaNs
+    phase_array = [0.2, NaN, 0.3, 0.4]
+    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+    @test phase_coherence ≈ 0.872677996249965
+    @test collective_phase ≈ 0.3
+
+    phase_coherence, collective_phase = estimate_order_parameter(phase_array; skip_nan=false)
+    @test isnan(phase_coherence)
+    @test isnan(collective_phase)
+
+    phase_array = [NaN, NaN]
+    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+    @test isnan(phase_coherence)
+    @test isnan(collective_phase)
+
 end
 
 
@@ -216,7 +231,7 @@ end
     fun = create_simulation_function(; transient=0.5, variable=2, variable_2=1)
     names = fun()
     @test names == ["minimum", "maximum", "amplitude", "rms", "winding_number",
-        "phase_coherence", "collective_phase"]
+        "phase_coherence", "mean_phase", "phase_coherence_population", "collective_phase"]
     
     properties = fun(model)
     @test properties[1] == 4
@@ -226,5 +241,7 @@ end
     @test 0 < properties[5]
     @test isnan(properties[6])
     @test isnan(properties[7])
+    @test isnan(properties[8])
+    @test isnan(properties[9])
 
 end

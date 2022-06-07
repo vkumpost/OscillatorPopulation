@@ -115,6 +115,10 @@ Estimate period of a signal based on its autocorrelation function.
 **Argument**
 - `phase_array`: Array of phases normalized to interval [0, 1].
 
+**Keyword Arguments**
+- `skip_nan`: Skip NaN values. If `false`, `NaN` values are propageted to the
+    output. Default value is `true`.
+
 **Returns**
 - `phase_coherence`: A number between 0 (no coherence) to 1 (full coherence).
     If `phase_array` is a matrix, phase coherence is calculated as a mean of
@@ -123,12 +127,22 @@ Estimate period of a signal based on its autocorrelation function.
     If `phase_array` is a matrix, collective phase is circular mean of the
     indivudal phases.
 """
-function estimate_order_parameter(phase_array)
+function estimate_order_parameter(phase_array; skip_nan=true)
 
     if minimum(phase_array) < 0 || maximum(phase_array) > 1
         msg = "Phase must be on interval [0, 1]!"
         err = OscillatorPopulationError(msg)
         throw(err)
+    end
+
+    nan_indices = isnan.(phase_array)
+    if !skip_nan && any(nan_indices)
+        return NaN, NaN
+    else
+        phase_array = phase_array[.!nan_indices]
+        if isempty(phase_array)
+            return NaN, NaN
+        end
     end
 
     n = length(phase_array)
@@ -314,7 +328,8 @@ function create_simulation_function(property_names=nothing; transient=0.9,
 
     if isnothing(property_names)
         property_names = ["minimum", "maximum", "amplitude", "rms",
-            "winding_number", "phase_coherence", "collective_phase"]
+            "winding_number", "phase_coherence", "mean_phase",
+            "phase_coherence_population", "collective_phase"]
     end
     n_properties = length(property_names)
 
@@ -334,6 +349,7 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         t = solution.time
         x = solution.mean[:, variable]
         y = solution.mean[:, variable_2]
+        U = solution.trajectories[:, variable, :]
         events = solution.events
         time_duration = maximum(t) - minimum(t)
         input_period = events[3, 1] - events[2, 1]
@@ -350,6 +366,8 @@ function create_simulation_function(property_names=nothing; transient=0.9,
 
         # Variables to save properties, so they do not be estimated repeatedly
         phase_coherence = nothing
+        mean_phase = nothing
+        phase_coherence_population = nothing
         collective_phase = nothing
 
         # Iterate property names
@@ -375,14 +393,28 @@ function create_simulation_function(property_names=nothing; transient=0.9,
             elseif property_name == "phase_coherence"
                 if isnothing(phase_coherence)
                     phase_array = estimate_phase_array(t, x, events)
-                    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+                    phase_coherence, mean_phase = estimate_order_parameter(phase_array)
                 end
                 property_values[i_property] = phase_coherence
                 
-            elseif property_name == "collective_phase"
-                if isnothing(collective_phase)
+            elseif property_name == "mean_phase"
+                if isnothing(mean_phase)
                     phase_array = estimate_phase_array(t, x, events)
-                    phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+                    phase_coherence, mean_phase = estimate_order_parameter(phase_array)
+                end
+                property_values[i_property] = mean_phase
+
+            elseif property_name == "phase_coherence_population"
+                if isnothing(phase_coherence_population)
+                    phase_array = estimate_phase_array(t, U, events)
+                    phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
+                end
+                property_values[i_property] = phase_coherence_population
+
+            elseif property_name == "collective_phase"    
+                if isnothing(collective_phase)
+                    phase_array = estimate_phase_array(t, U, events)
+                    phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
                 end
                 property_values[i_property] = collective_phase
 
