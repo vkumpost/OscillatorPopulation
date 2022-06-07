@@ -308,11 +308,13 @@ Plot Arnold tongue or onion.
 - `color_limits`: Color limits specified as `[cmin, cmax]`.
 - `show_colorbar`: If `true`, show a colorbar.
 - `colorbar_label`: Label for the colorbar.
+- `colormap`: Select colormap. For example `"twilight"` for cyclic data. Default
+    value is `"viridis"`.
 - `ax`: PyPlot axes.
 """
 function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_name=nothing,
     error_range=nothing, fixed_value=nothing, color_limits=nothing,
-    show_colorbar=true, colorbar_label=nothing, ax=gca())
+    show_colorbar=true, colorbar_label=nothing, colormap="viridis", ax=gca())
 
     if type == "tongue"
         x_axis_name = "input_period"
@@ -357,11 +359,11 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
         property_name = "Entrainment"
         Z = fill(1, n_y_values, n_x_values)
         Z[idx] .= 0
-        h = ax.pcolor(x_values_matrix, y_values_matrix, Z, rasterized=true)
+        h = ax.pcolor(x_values_matrix, y_values_matrix, Z, rasterized=true, cmap=colormap)
     else
         Z = reshape(df[:, property_name], n_y_values, n_x_values)
         Z[.!idx] .= NaN
-        h = ax.pcolor(x_values_matrix, y_values_matrix, Z, rasterized=true)
+        h = ax.pcolor(x_values_matrix, y_values_matrix, Z, rasterized=true, cmap=colormap)
     end
 
     # Set color limits
