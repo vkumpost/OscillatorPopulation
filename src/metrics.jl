@@ -313,8 +313,8 @@ function create_simulation_function(property_names=nothing; transient=0.9,
     trajectories=1, variable=1, variable_2=2, show_plots=false, kwargs...)
 
     if isnothing(property_names)
-        property_names = ["minimum", "maximum", "amplitude", "winding_number",
-            "phase_coherence", "collective_phase"]
+        property_names = ["minimum", "maximum", "amplitude", "rms",
+            "winding_number", "phase_coherence", "collective_phase"]
     end
     n_properties = length(property_names)
 
@@ -363,7 +363,10 @@ function create_simulation_function(property_names=nothing; transient=0.9,
                 property_values[i_property] = maximum(x)
 
             elseif property_name == "amplitude"
-                property_values[i_property] = maximum(x) - minimum(x)
+                property_values[i_property] = maximum(x) .- minimum(x)
+
+            elseif property_name == "rms"
+                property_values[i_property] = sqrt(mean((x .- mean(x)) .^ 2))
 
             elseif property_name == "winding_number"
                 winding_number_period = estimate_winding_number_period(x, y, time_duration)

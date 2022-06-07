@@ -212,17 +212,19 @@ end
     model = create_dummy("ode")
     events = create_events_cycle(10, 0.5)
     set_input!(model, events, "c")
+    set_solver!(model, saveat=1.0)
     fun = create_simulation_function(; transient=0.5, variable=2, variable_2=1)
     names = fun()
-    @test names == ["minimum", "maximum", "amplitude", "winding_number",
+    @test names == ["minimum", "maximum", "amplitude", "rms", "winding_number",
         "phase_coherence", "collective_phase"]
     
     properties = fun(model)
     @test properties[1] == 4
     @test properties[2] == 8
     @test properties[3] == 4
-    @test 0 < properties[4]
-    @test isnan(properties[5])
+    @test properties[4] ≈ sqrt(sum(([4, 6, 8] .- 6).^2)/3)
+    @test 0 < properties[5]
     @test isnan(properties[6])
+    @test isnan(properties[7])
 
 end
