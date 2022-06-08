@@ -52,6 +52,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `simulate_population`: Simulate an uncoupled population.
 - `plot_solution`: Plot results of a simulation.
 - `select_time`: Select specific time of a simulation result.
+- `select_subset`: Select a subset of trajectories.
 
 **Parameter Scans**
 - `scan`: Scan parameter values.
@@ -102,7 +103,7 @@ export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
     simulate_model
 include("model.jl")
 
-export simulate_population, plot_solution, select_time
+export simulate_population, plot_solution, select_time, select_subset
 include("population.jl")
 
 export scan, scan_arnold, plot_arnold, estimate_prc

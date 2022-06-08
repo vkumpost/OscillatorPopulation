@@ -294,3 +294,29 @@ function select_time(solution::PopulationSolution; remove_offset=true, kwargs...
     return PopulationSolution(t, m, U, events, success)
 
 end
+
+
+"""
+`select_subset`
+
+Select a subset of trajectories from the population solution.
+
+**Arguments**
+- `solution`: `PopulationSolution`.
+- `indices`: Vector indicating indices of the trajectories in the subset.
+
+**Returns**
+- `solution_subset`: `PopulationSolution` containing the subset of the original
+    trajectories and recalculated mean for this subset.
+"""
+function select_subset(solution::PopulationSolution, indices)
+
+    t = solution.time
+    U = solution.trajectories[:, :, indices]
+    m = mean(U, dims=3)[:, :]
+    events = solution.events
+    success = solution.success
+    solution_subset = PopulationSolution(t, m, U, events, success)
+    return solution_subset
+
+end

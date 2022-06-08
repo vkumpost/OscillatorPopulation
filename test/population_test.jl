@@ -183,3 +183,33 @@ end
     @test all(solution2.success)
 
 end
+
+@testset "select_subset" begin
+
+    t = [0.0, 1.0, 2.0]
+    m = [1.0 0.0; 2.0 2.0; 3.0 4.0]
+    U = Array{Float64, 3}(undef, 3, 2, 4)
+    U[:, :, 1] = [0.5 0.0; 1.5 1.5; 2.5 3.5]
+    U[:, :, 2] = [1.5 0.0; 2.5 2.5; 3.5 4.5]
+    U[:, :, 3] = [0.0 0.0; 0.0 0.0; 0.0 0.0]
+    U[:, :, 4] = [1.0 1.0; 1.0 1.0; 1.0 1.0]
+    events = [0.0 1.0; 1.2 1.8]
+    solution = OscillatorPopulation.PopulationSolution(t, m, U, events, true)
+
+    # Select one cell
+    solution_subset = select_subset(solution, 2)
+    @test solution_subset.time ≈ t
+    @test solution_subset.mean ≈ U[:, :, 2]
+    @test solution_subset.trajectories ≈ U[:, :, 2]
+    @test solution_subset.events ≈ events
+    @test solution_subset.success
+
+    # Select multiple cells
+    solution_subset = select_subset(solution, [1, 3])
+    @test solution_subset.time ≈ t
+    @test solution_subset.mean ≈ [0.25 0.0; 0.75 0.75; 1.25 1.75]
+    @test solution_subset.trajectories ≈ U[:, :, [1, 3]]
+    @test solution_subset.events ≈ events
+    @test solution_subset.success
+    
+end
