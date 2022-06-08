@@ -300,6 +300,100 @@ function estimate_winding_number_period(x, y, time_duration; remove_mean=true)
 end
 
 
+function _estimate_entrainment_properties()
+    property_names = ["minimum", "maximum", "amplitude", "rms",
+            "winding_number", "phase_coherence", "mean_phase",
+            "phase_coherence_population", "collective_phase"]
+    return property_names
+end
+
+
+function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, property_names=nothing)
+
+    if isnothing(property_names)
+        property_names = _estimate_entrainment_properties()
+    end
+    n_properties = length(property_names)
+
+    # Extract time, state, and events
+    t = solution.time
+    x = solution.mean[:, variable_x]
+    y = solution.mean[:, variable_y]
+    U = solution.trajectories[:, variable_x, :]
+    events = solution.events
+
+    # Initialize vector for the estimated properties
+    property_values = fill(NaN, n_properties)
+
+    # Variables to save properties, so they do not be estimated repeatedly
+    phase_coherence = nothing
+    mean_phase = nothing
+    phase_coherence_population = nothing
+    collective_phase = nothing
+
+    # Iterate property names
+    for (i_property, property_name) in enumerate(property_names)
+
+        # Estimate property
+        if property_name == "minimum"
+            property_values[i_property] = minimum(x)
+
+        elseif property_name == "maximum"
+            property_values[i_property] = maximum(x)
+
+        elseif property_name == "amplitude"
+            property_values[i_property] = maximum(x) .- minimum(x)
+
+        elseif property_name == "rms"
+            property_values[i_property] = sqrt(mean((x .- mean(x)) .^ 2))
+
+        elseif property_name == "winding_number"
+            time_duration = maximum(t) - minimum(t)
+            input_period = events[3, 1] - events[2, 1]
+            winding_number_period = estimate_winding_number_period(x, y, time_duration)
+            property_values[i_property] = input_period / winding_number_period
+
+        elseif property_name == "phase_coherence"
+            if isnothing(phase_coherence)
+                phase_array = estimate_phase_array(t, x, events)
+                phase_coherence, mean_phase = estimate_order_parameter(phase_array)
+            end
+            property_values[i_property] = phase_coherence
+            
+        elseif property_name == "mean_phase"
+            if isnothing(mean_phase)
+                phase_array = estimate_phase_array(t, x, events)
+                phase_coherence, mean_phase = estimate_order_parameter(phase_array)
+            end
+            property_values[i_property] = mean_phase
+
+        elseif property_name == "phase_coherence_population"
+            if isnothing(phase_coherence_population)
+                phase_array = estimate_phase_array(t, U, events)
+                phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
+            end
+            property_values[i_property] = phase_coherence_population
+
+        elseif property_name == "collective_phase"    
+            if isnothing(collective_phase)
+                phase_array = estimate_phase_array(t, U, events)
+                phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
+            end
+            property_values[i_property] = collective_phase
+
+        else
+            msg = "Property `$(property_name)` is not valid!"
+            err = OscillatorPopulationError(msg)
+            throw(err)
+            
+        end
+    end
+
+    return property_values
+
+end
+
+
 """
 `create_simulation_function`
 
@@ -324,19 +418,13 @@ Generate a function that simulates a model population and apply metrics to the
     not passed, the function returns the metric names as an array of strings.
 """
 function create_simulation_function(property_names=nothing; transient=0.9,
-    trajectories=1, variable=1, variable_2=2, show_plots=false, kwargs...)
-
-    if isnothing(property_names)
-        property_names = ["minimum", "maximum", "amplitude", "rms",
-            "winding_number", "phase_coherence", "mean_phase",
-            "phase_coherence_population", "collective_phase"]
-    end
-    n_properties = length(property_names)
+    trajectories=1, variable_x=1, variable_y=2, show_plots=false, kwargs...)
 
     simulation_function = function (model=nothing; show_plots=show_plots)
 
         # Return property names, if the model was not passed
         if isnothing(model)
+            property_names = _estimate_entrainment_properties()
             return property_names
         end
 
@@ -345,87 +433,19 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         min_time = transient * maximum(solution.time)
         solution = select_time(solution, min_time=min_time)
 
-        # Extract time, state, and events
-        t = solution.time
-        x = solution.mean[:, variable]
-        y = solution.mean[:, variable_2]
-        U = solution.trajectories[:, variable, :]
-        events = solution.events
-        time_duration = maximum(t) - minimum(t)
-        input_period = events[3, 1] - events[2, 1]
-
         if show_plots
             _, ax = subplots()
+            t = solution.time
+            x = solution.mean[:, variable_x]
+            events = solution.events
             ax.plot(t, x; color="black")
             plot_events(events)
             ax.set_title("Variable $variable")
         end
 
-        # Initialize vector for the estimated properties
-        property_values = fill(NaN, n_properties)
-
-        # Variables to save properties, so they do not be estimated repeatedly
-        phase_coherence = nothing
-        mean_phase = nothing
-        phase_coherence_population = nothing
-        collective_phase = nothing
-
-        # Iterate property names
-        for (i_property, property_name) in enumerate(property_names)
-
-            # Estimate property
-            if property_name == "minimum"
-                property_values[i_property] = minimum(x)
-
-            elseif property_name == "maximum"
-                property_values[i_property] = maximum(x)
-
-            elseif property_name == "amplitude"
-                property_values[i_property] = maximum(x) .- minimum(x)
-
-            elseif property_name == "rms"
-                property_values[i_property] = sqrt(mean((x .- mean(x)) .^ 2))
-
-            elseif property_name == "winding_number"
-                winding_number_period = estimate_winding_number_period(x, y, time_duration)
-                property_values[i_property] = input_period / winding_number_period
-
-            elseif property_name == "phase_coherence"
-                if isnothing(phase_coherence)
-                    phase_array = estimate_phase_array(t, x, events)
-                    phase_coherence, mean_phase = estimate_order_parameter(phase_array)
-                end
-                property_values[i_property] = phase_coherence
-                
-            elseif property_name == "mean_phase"
-                if isnothing(mean_phase)
-                    phase_array = estimate_phase_array(t, x, events)
-                    phase_coherence, mean_phase = estimate_order_parameter(phase_array)
-                end
-                property_values[i_property] = mean_phase
-
-            elseif property_name == "phase_coherence_population"
-                if isnothing(phase_coherence_population)
-                    phase_array = estimate_phase_array(t, U, events)
-                    phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
-                end
-                property_values[i_property] = phase_coherence_population
-
-            elseif property_name == "collective_phase"    
-                if isnothing(collective_phase)
-                    phase_array = estimate_phase_array(t, U, events)
-                    phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
-                end
-                property_values[i_property] = collective_phase
-
-            else
-                msg = "Property `$(property_name)` is not valid!"
-                err = OscillatorPopulationError(msg)
-                throw(err)
-                
-            end
-        end
-
+        property_values = _estimate_entrainment_properties(solution;
+            variable_x=variable_x, variable_y=variable_y,
+            property_names=property_names)
         return property_values
 
     end

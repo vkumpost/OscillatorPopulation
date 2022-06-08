@@ -228,7 +228,7 @@ end
     events = create_events_cycle(10, 0.5)
     set_input!(model, events, "c")
     set_solver!(model, saveat=1.0)
-    fun = create_simulation_function(; transient=0.5, variable=2, variable_2=1)
+    fun = create_simulation_function(; transient=0.5, variable_x=2, variable_y=1)
     names = fun()
     @test names == ["minimum", "maximum", "amplitude", "rms", "winding_number",
         "phase_coherence", "mean_phase", "phase_coherence_population", "collective_phase"]
