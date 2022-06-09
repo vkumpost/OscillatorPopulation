@@ -407,8 +407,10 @@ Generate a function that simulates a model population and apply metrics to the
 - `transient`: The proportion of the solution to be discrated to avoid transient
     effects (default 0.9).
 - `trajectories`: Number of trajectories in the population (default 1).
-- `variable`: Trajectory that is used to calculate the metrics (default 1).
-- `variable_2`: The second variable for the phase plane (default 2).
+- `variable_x`: Trajectory that is used to calculate the metrics (default 1).
+- `variable_y`: The second variable for the phase plane (default 2).
+- `single_cells`: If `true`, parameters for single cells are also estimated. 
+    Default value is `false`.
 - `show_plots`: Show plots for visual verification (default `false`).
 - `kwargs...`: Keyword arguments passed to `simulate_population`.
 
@@ -418,14 +420,22 @@ Generate a function that simulates a model population and apply metrics to the
     not passed, the function returns the metric names as an array of strings.
 """
 function create_simulation_function(property_names=nothing; transient=0.9,
-    trajectories=1, variable_x=1, variable_y=2, show_plots=false, kwargs...)
+    trajectories=1, variable_x=1, variable_y=2, single_cells=false,
+    show_plots=false, kwargs...)
 
     simulation_function = function (model=nothing; show_plots=show_plots)
 
         # Return property names, if the model was not passed
         if isnothing(model)
             property_names = _estimate_entrainment_properties()
-            return property_names
+            property_names_output = deepcopy(property_names)
+            if single_cells
+                for i in 1:trajectories
+                    extended_names = [x * "_$(i)" for x in property_names]
+                    append!(property_names_output, extended_names)    
+                end
+            end
+            return property_names_output
         end
 
         # Simulate the population
@@ -440,12 +450,22 @@ function create_simulation_function(property_names=nothing; transient=0.9,
             events = solution.events
             ax.plot(t, x; color="black")
             plot_events(events)
-            ax.set_title("Variable $variable")
+            ax.set_title("Mean")
         end
 
         property_values = _estimate_entrainment_properties(solution;
             variable_x=variable_x, variable_y=variable_y,
             property_names=property_names)
+        if single_cells
+            for i in 1:trajectories
+                solution_subset = select_subset(solution, i)
+                property_values_subset = _estimate_entrainment_properties(
+                    solution_subset;
+                    variable_x=variable_x, variable_y=variable_y,
+                    property_names=property_names)
+                append!(property_values, property_values_subset)
+            end
+        end
         return property_values
 
     end
