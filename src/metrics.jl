@@ -20,6 +20,32 @@ end
 
 
 """
+`cxcorr`
+
+Compute circular cross-correlation.
+
+**Arguments**
+- `x`: Array representing one period of a signal.
+- `y`: Array representing one period of a signal.
+
+**Returns**
+- `r`: Circular cross-correlation of `x` and `y`.
+"""
+function cxcorr(x, y)
+
+    n = length(x)
+    r = fill(NaN, n)
+    lags = 0:(n-1)
+    for lag in lags
+        x_circ = x[[(lag+1):end...; 1:lag...]]
+        r[lag + 1] = sum(x_circ .* y)
+    end
+    return r
+
+end
+
+
+"""
 `estimate_phase_array`
 
 Estimate entrainment phase. The input parameters are expected to represent a

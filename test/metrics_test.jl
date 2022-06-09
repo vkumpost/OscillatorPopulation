@@ -14,6 +14,18 @@
 
 end
 
+@testset "cxcorr" begin
+
+    x = [0, 0, 1, 1, 0]
+    y = [0, 1, 1, 0, 0]
+    r = cxcorr(x, y)
+    @test r ≈ [1, 2, 1, 0, 0]
+
+    r = cxcorr(y, x)
+    @test r ≈ [1, 0, 0, 1, 2]
+
+end
+
 @testset "estimate_phase_array" begin
     
     t = 1:20

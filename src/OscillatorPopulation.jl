@@ -23,6 +23,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 
 **Metrics**
 - `cmean`: Circular mean.
+- `cxcorr`: Circular cross-correlation.
 - `estimate_phase_array`: Estimate entrainment phase at each cycle.
 - `estimate_order_parameter`: Estimate Kuramoto's order parameter.
 - `estimate_period`: Estimate period.
@@ -87,8 +88,8 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export cmean, estimate_phase_array, estimate_order_parameter, estimate_period,
-    estimate_winding_number, estimate_winding_number_period,
+export cmean, cxcorr, estimate_phase_array, estimate_order_parameter,
+    estimate_period, estimate_winding_number, estimate_winding_number_period,
     create_simulation_function
 include("metrics.jl")
 
