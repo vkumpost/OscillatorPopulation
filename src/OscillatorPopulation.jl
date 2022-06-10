@@ -25,6 +25,10 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `cmean`: Circular mean.
 - `cxcorr`: Circular cross-correlation.
 - `estimate_phase_array`: Estimate entrainment phase at each cycle.
+- `estimate_phase_array_peak_prominence`: Estimate entrainment phase based on
+    the peak prominence.
+- `estimate_phase_array_cxcorr`: Estimate entrainment phase using circular
+    cross-correlation.
 - `estimate_order_parameter`: Estimate Kuramoto's order parameter.
 - `estimate_period`: Estimate period.
 - `estimate_winding_number`: Estimate winding number.
@@ -66,10 +70,13 @@ module OscillatorPopulation
 using DataFrames
 using DelimitedFiles
 using DifferentialEquations
+using FFTW
 using PyPlot
 using Random
 using Statistics
 using StatsBase
+
+FFTW.set_num_threads(1)
 
 import ProgressMeter
 import XLSX
@@ -88,9 +95,10 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export cmean, cxcorr, estimate_phase_array, estimate_order_parameter,
-    estimate_period, estimate_winding_number, estimate_winding_number_period,
-    create_simulation_function
+export cmean, cxcorr, estimate_phase_array,
+    estimate_phase_array_peak_prominence, estimate_phase_array_cxcorr,
+    estimate_order_parameter, estimate_period, estimate_winding_number,
+    estimate_winding_number_period, create_simulation_function
 include("metrics.jl")
 
 export smooth

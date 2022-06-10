@@ -28,18 +28,42 @@ Compute circular cross-correlation.
 - `x`: Array representing one period of a signal.
 - `y`: Array representing one period of a signal.
 
+**Keyword Arguments**
+- `use_fft`: If `true`, the cross-correlation is calculated using the fast
+    Fourier transform algorithm. Default value is `false`.
+
 **Returns**
 - `r`: Circular cross-correlation of `x` and `y`.
 """
-function cxcorr(x, y)
+function cxcorr(x, y; use_fft=false)
 
-    n = length(x)
-    r = fill(NaN, n)
-    lags = 0:(n-1)
-    for lag in lags
-        x_circ = x[[(lag+1):end...; 1:lag...]]
-        r[lag + 1] = sum(x_circ .* y)
+    if use_fft
+        
+        n = length(x)
+
+        # p = plan_rfft(zeros(n); flags=FFTW.PATIENT)
+        # x_fft = p*x
+        # y_fft = p*y
+        x_fft = rfft(x)
+        y_fft = rfft(y)
+        
+        S = x_fft .* conj(y_fft)
+
+        # nS = length(S)
+        # ip = plan_irfft(zeros(ComplexF64, nS), n; flags=FFTW.PATIENT)
+        # r = ip*S
+        r = irfft(S, n)
+
+    else
+        n = length(x)
+        r = fill(NaN, n)
+        lags = 0:(n-1)
+        for lag in lags
+            x_circ = x[[(lag+1):end...; 1:lag...]]
+            r[lag + 1] = sum(x_circ .* y)
+        end
     end
+
     return r
 
 end
@@ -58,38 +82,60 @@ discarted.
 - `events`: Events matrix with two columns representing a square signal.
 
 **Keyword Arguments**
-- `normalize`: If `true`, the estimated phase is normalized by the event period.
+- `method`: Choose method to estimate the phase. Possible options are 
+    `"peak_prominence"` (default), `"cxcorr"`.
 - `smooth_span`: Length of the moving average filter (in samples) used to average
     `x` before the phase is estimated.
-- `show_plots`: If `true`, a figure is generated for a visual control.
+- `show_plots`: [NOT IMPLEMENTED]
 
 **Returns**
 - `phase_array`: Array of phases estimated at each cycle of the input data. If 
     `x` is a matrix, `phase_array` is also a matrix, where each column contains
     estimated phases for the individual data vectors.
 """
-function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_plots=false)
+function estimate_phase_array(t, x, events; method="peak_prominence",
+    smooth_span=1, show_plots=false)
 
     if smooth_span > 1
         x = smooth(x, span=smooth_span)
     end
+
+    if method == "peak_prominence"
+        phase_array = estimate_phase_array_peak_prominence(t, x, events)
+    elseif method == "cxcorr"
+        phase_array = estimate_phase_array_cxcorr(t, x, events)
+    end
+
+    return phase_array
+
+end
+
+
+"""
+`estimate_phase_array_peak_prominence`
+
+Estimate entrainment phase based on the peak prominence.
+
+**Arguments**
+- `t`: Time vector.
+- `x`: Data vector or matrix, where each column represents one data vector.
+- `events`: Events matrix with two columns representing a square signal.
+
+**Returns**
+- `phase_array`: Array of phases estimated at each cycle of the input data.
+"""
+function estimate_phase_array_peak_prominence(t, x, events)
+
     pr = findpeaks(x, t)
     pks = peakprominences(pr)
     locs = peaklocations(pr)
-
-    if show_plots
-        fig, ax = subplots()
-        ax.plot(t, x, color="black")
-        ax.plot(t[pr.indices], x[pr.indices], "o", color="blue")
-        plot_events(events, ax=ax)
-    end
 
     n_events = size(events, 1)
     phase_array = Float64[]
     for i_event = 2:(n_events-1)
         window_start = events[i_event, 1]
         window_end = events[i_event+1, 1]
-        idx = window_start .< locs .< window_end
+        idx = window_start .<= locs .< window_end
         window_locs = locs[idx]
         window_pks = pks[idx]
 
@@ -101,14 +147,47 @@ function estimate_phase_array(t, x, events; normalize=true, smooth_span=1, show_
             idx_peak = argmax(window_pks)
             loc = window_locs[idx_peak]
             phase = loc - window_start
-            if normalize
-                phase /= (window_end - window_start)
-            end
+            phase /= (window_end - window_start)
             push!(phase_array, phase)
         end
+    end
 
-        if show_plots
-            ax.plot(loc, x[pr.indices[idx][idx_peak]], "o", color="red")
+    return phase_array
+
+end
+
+
+"""
+`estimate_phase_array_cxcorr`
+
+Estimate entrainment phase based on the circular cross-correlation.
+
+**Arguments**
+- `t`: Time vector.
+- `x`: Data vector or matrix, where each column represents one data vector.
+- `events`: Events matrix with two columns representing a square signal.
+
+**Returns**
+- `phase_array`: Array of phases estimated at each cycle of the input data.
+"""
+function estimate_phase_array_cxcorr(t, x, events)
+
+    fun = events_to_function(events)
+    y = fun.(t)
+
+    n_events = size(events, 1)
+    phase_array = Float64[]
+    for i_event = 2:(n_events-1)
+        window_start = events[i_event, 1]
+        window_end = events[i_event+1, 1]
+        window_idices = window_start .<= t .< window_end
+        if sum(window_idices) == 0
+            push!(phase_array, NaN)
+        else
+            r = cxcorr(x[window_idices], y[window_idices])
+            _, max_index = findmax(r)
+            phase = (max_index - 1) / sum(window_idices)
+            push!(phase_array, phase)
         end
     end
 
@@ -381,28 +460,28 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
 
         elseif property_name == "phase_coherence"
             if isnothing(phase_coherence)
-                phase_array = estimate_phase_array(t, x, events)
+                phase_array = estimate_phase_array(t, x, events; method="cxcorr")
                 phase_coherence, mean_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = phase_coherence
             
         elseif property_name == "mean_phase"
             if isnothing(mean_phase)
-                phase_array = estimate_phase_array(t, x, events)
+                phase_array = estimate_phase_array(t, x, events; method="cxcorr")
                 phase_coherence, mean_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = mean_phase
 
         elseif property_name == "phase_coherence_population"
             if isnothing(phase_coherence_population)
-                phase_array = estimate_phase_array(t, U, events)
+                phase_array = estimate_phase_array(t, U, events; method="cxcorr")
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = phase_coherence_population
 
         elseif property_name == "collective_phase"    
             if isnothing(collective_phase)
-                phase_array = estimate_phase_array(t, U, events)
+                phase_array = estimate_phase_array(t, U, events; method="cxcorr")
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = collective_phase

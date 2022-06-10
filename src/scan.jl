@@ -162,8 +162,8 @@ function scan(model::Model, parameters::Vector, simulation_function::Function;
         try
             scan_summary[i, :] = simulation_function(model2)
         catch err
+            @warn "An error occured for $(parameter_names) = $(parameter_values)"
             if !catch_errors
-                @warn "An error occured for $(parameter_names) = $(parameter_values)"
                 throw(err)
             else
                 scan_summary[i, :] .= NaN
@@ -260,8 +260,8 @@ function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
         try
             scan_results[i, :] = simulation_function(model2)
         catch err
+            @warn "An error occured for [I, T, D] = [$input_amplitude, $input_period, $input_duty_cycle]"
             if !catch_errors
-                @warn "An error occured for [I, T, D] = [$input_amplitude, $input_period, $input_duty_cycle]"
                 throw(err)
             else
                 scan_results[i, :] .= NaN

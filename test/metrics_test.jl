@@ -18,11 +18,20 @@ end
 
     x = [0, 0, 1, 1, 0]
     y = [0, 1, 1, 0, 0]
-    r = cxcorr(x, y)
+    r = cxcorr(x, y; use_fft=false)
     @test r ≈ [1, 2, 1, 0, 0]
 
-    r = cxcorr(y, x)
+    r = cxcorr(y, x; use_fft=false)
     @test r ≈ [1, 0, 0, 1, 2]
+
+    t = 0:0.01:5
+    x = sin.(2π * t)
+    y = sin.(2π * (t .+ 0.25))
+    r1 = cxcorr(x, y; use_fft=false)
+    r2 = cxcorr(x, y; use_fft=true)
+    @test findmax(r1)[2] ≈ 26
+    @test findmax(r2)[2] ≈ 26
+    @test r1 ≈ r2
 
 end
 
@@ -40,9 +49,6 @@ end
 
     phase_arr = estimate_phase_array(t, x, events)
     @test phase_arr ≈ [0.75, 0.75, 0.75]
-
-    phase_arr = estimate_phase_array(t, x, events; normalize=false)
-    @test phase_arr ≈ [3, 3, 3]
 
     # Skipped period
     x = copy(x_original)
@@ -100,6 +106,18 @@ end
         0.75 -0.1 0.50 0.50;
         0.75 0.75 0.75 0.75
     ]
+
+end
+
+@testset "estimate_phase_array_peak_prominence" begin
+
+    @test estimate_phase_array_peak_prominence isa Function
+
+end
+
+@testset "estimate_phase_array_cxcorr" begin
+
+    @test estimate_phase_array_cxcorr isa Function
 
 end
 
@@ -252,6 +270,10 @@ end
     @test properties[3] == 4
     @test properties[4] ≈ sqrt(sum(([4, 6, 8] .- 6).^2)/3)
     @test 0 < properties[5]
+    println(properties[6])
+    println(properties[7])
+    println(properties[8])
+    println(properties[9])
     @test isnan(properties[6])
     @test isnan(properties[7])
     @test isnan(properties[8])
