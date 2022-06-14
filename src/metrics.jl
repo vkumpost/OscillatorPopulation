@@ -83,7 +83,7 @@ discarted.
 
 **Keyword Arguments**
 - `method`: Choose method to estimate the phase. Possible options are 
-    `"peak_prominence"` (default), `"cxcorr"`.
+    `"peak_heights"` (default), `"peak_prominence"`, and `"cxcorr"`.
 - `smooth_span`: Length of the moving average filter (in samples) used to average
     `x` before the phase is estimated.
 - `show_plots`: [NOT IMPLEMENTED]
@@ -93,15 +93,17 @@ discarted.
     `x` is a matrix, `phase_array` is also a matrix, where each column contains
     estimated phases for the individual data vectors.
 """
-function estimate_phase_array(t, x, events; method="peak_prominence",
+function estimate_phase_array(t, x, events; method="peak_heights",
     smooth_span=1, show_plots=false)
 
     if smooth_span > 1
         x = smooth(x, span=smooth_span)
     end
 
-    if method == "peak_prominence"
-        phase_array = estimate_phase_array_peak_prominence(t, x, events)
+    if method == "peak_heights"
+        phase_array = estimate_phase_array_peaks(t, x, events; use_prominence=false)
+    elseif method == "peak_prominence"
+        phase_array = estimate_phase_array_peaks(t, x, events; use_prominence=true)
     elseif method == "cxcorr"
         phase_array = estimate_phase_array_cxcorr(t, x, events)
     end
@@ -112,7 +114,7 @@ end
 
 
 """
-`estimate_phase_array_peak_prominence`
+`estimate_phase_array_peaks`
 
 Estimate entrainment phase based on the peak prominence.
 
@@ -121,13 +123,22 @@ Estimate entrainment phase based on the peak prominence.
 - `x`: Data vector or matrix, where each column represents one data vector.
 - `events`: Events matrix with two columns representing a square signal.
 
+**Keyword Arguments**
+- `use_prominence`: If `true`, the algorithm will use peak prominences
+    instead of peak heights to determine the heights peaks. Default value is
+    `false`.
+
 **Returns**
 - `phase_array`: Array of phases estimated at each cycle of the input data.
 """
-function estimate_phase_array_peak_prominence(t, x, events)
+function estimate_phase_array_peaks(t, x, events; use_prominence=false)
 
     pr = findpeaks(x, t)
-    pks = peakprominences(pr)
+    if use_prominence
+        pks = peakprominences(pr)
+    else
+        pks = peakheights(pr)
+    end
     locs = peaklocations(pr)
 
     n_events = size(events, 1)
@@ -460,28 +471,28 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
 
         elseif property_name == "phase_coherence"
             if isnothing(phase_coherence)
-                phase_array = estimate_phase_array(t, x, events; method="cxcorr")
+                phase_array = estimate_phase_array(t, x, events; method="peak_heights")  # peak_heights, cxcorr
                 phase_coherence, mean_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = phase_coherence
             
         elseif property_name == "mean_phase"
             if isnothing(mean_phase)
-                phase_array = estimate_phase_array(t, x, events; method="cxcorr")
+                phase_array = estimate_phase_array(t, x, events; method="peak_heights")
                 phase_coherence, mean_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = mean_phase
 
         elseif property_name == "phase_coherence_population"
             if isnothing(phase_coherence_population)
-                phase_array = estimate_phase_array(t, U, events; method="cxcorr")
+                phase_array = estimate_phase_array(t, U, events; method="peak_heights")
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = phase_coherence_population
 
         elseif property_name == "collective_phase"    
             if isnothing(collective_phase)
-                phase_array = estimate_phase_array(t, U, events; method="cxcorr")
+                phase_array = estimate_phase_array(t, U, events; method="peak_heights")
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = collective_phase
@@ -512,6 +523,7 @@ Generate a function that simulates a model population and apply metrics to the
 - `transient`: The proportion of the solution to be discrated to avoid transient
     effects (default 0.9).
 - `trajectories`: Number of trajectories in the population (default 1).
+- `cycle_samples`: The number of samples within one cycle (default 10).
 - `variable_x`: Trajectory that is used to calculate the metrics (default 1).
 - `variable_y`: The second variable for the phase plane (default 2).
 - `single_cells`: If `true`, parameters for single cells are also estimated. 
@@ -525,8 +537,8 @@ Generate a function that simulates a model population and apply metrics to the
     not passed, the function returns the metric names as an array of strings.
 """
 function create_simulation_function(property_names=nothing; transient=0.9,
-    trajectories=1, variable_x=1, variable_y=2, single_cells=false,
-    show_plots=false, kwargs...)
+    trajectories=1, cycle_samples=10, variable_x=1, variable_y=2,
+    single_cells=false, show_plots=false, kwargs...)
 
     simulation_function = function (model=nothing; show_plots=show_plots)
 
@@ -544,9 +556,19 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         end
 
         # Simulate the population
-        solution = simulate_population(model, trajectories; kwargs...)
-        min_time = transient * maximum(solution.time)
+        max_time = model.problem.tspan[end]
+        time_step = diff(model.input[1][2:3, 1])[1] / cycle_samples
+        min_time = transient * max_time
+        _, idx = findmin(abs.(min_time .- model.input[1][:, 1]))
+        min_time = model.input[1][idx, 1]
+        model2 = deepcopy(model)
+        set_solver!(model2, saveat=min_time:time_step:max_time)
+        solution = simulate_population(model2, trajectories; kwargs...)
         solution = select_time(solution, min_time=min_time)
+
+        # solution = simulate_population(model, trajectories; kwargs...)
+        # min_time = transient * maximum(solution.time)
+        # solution = select_time(solution, min_time=min_time)
 
         if show_plots
             _, ax = subplots()

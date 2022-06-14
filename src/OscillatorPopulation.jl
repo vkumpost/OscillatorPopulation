@@ -25,8 +25,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `cmean`: Circular mean.
 - `cxcorr`: Circular cross-correlation.
 - `estimate_phase_array`: Estimate entrainment phase at each cycle.
-- `estimate_phase_array_peak_prominence`: Estimate entrainment phase based on
-    the peak prominence.
+- `estimate_phase_array_peaks`: Estimate entrainment phase using peak detection.
 - `estimate_phase_array_cxcorr`: Estimate entrainment phase using circular
     cross-correlation.
 - `estimate_order_parameter`: Estimate Kuramoto's order parameter.
@@ -96,7 +95,7 @@ export OscillatorPopulationError
 include("exceptions.jl")
 
 export cmean, cxcorr, estimate_phase_array,
-    estimate_phase_array_peak_prominence, estimate_phase_array_cxcorr,
+    estimate_phase_array_peaks, estimate_phase_array_cxcorr,
     estimate_order_parameter, estimate_period, estimate_winding_number,
     estimate_winding_number_period, create_simulation_function
 include("metrics.jl")

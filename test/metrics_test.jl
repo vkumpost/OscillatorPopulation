@@ -109,9 +109,9 @@ end
 
 end
 
-@testset "estimate_phase_array_peak_prominence" begin
+@testset "estimate_phase_array_peaks" begin
 
-    @test estimate_phase_array_peak_prominence isa Function
+    @test estimate_phase_array_peaks isa Function
 
 end
 
@@ -268,12 +268,8 @@ end
     @test properties[1] == 4
     @test properties[2] == 8
     @test properties[3] == 4
-    @test properties[4] ≈ sqrt(sum(([4, 6, 8] .- 6).^2)/3)
+    @test 1 < properties[4] < 1.5
     @test 0 < properties[5]
-    println(properties[6])
-    println(properties[7])
-    println(properties[8])
-    println(properties[9])
     @test isnan(properties[6])
     @test isnan(properties[7])
     @test isnan(properties[8])
