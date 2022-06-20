@@ -75,8 +75,6 @@ using Random
 using Statistics
 using StatsBase
 
-FFTW.set_num_threads(1)
-
 import ProgressMeter
 import XLSX
 

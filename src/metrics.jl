@@ -83,7 +83,7 @@ discarted.
 
 **Keyword Arguments**
 - `method`: Choose method to estimate the phase. Possible options are 
-    `"peak_heights"` (default), `"peak_prominence"`, and `"cxcorr"`.
+    `"peak_height"` (default), `"peak_prominence"`, and `"cxcorr"`.
 - `smooth_span`: Length of the moving average filter (in samples) used to average
     `x` before the phase is estimated.
 - `show_plots`: [NOT IMPLEMENTED]
@@ -93,14 +93,14 @@ discarted.
     `x` is a matrix, `phase_array` is also a matrix, where each column contains
     estimated phases for the individual data vectors.
 """
-function estimate_phase_array(t, x, events; method="peak_heights",
+function estimate_phase_array(t, x, events; method="peak_height",
     smooth_span=1, show_plots=false)
 
     if smooth_span > 1
         x = smooth(x, span=smooth_span)
     end
 
-    if method == "peak_heights"
+    if method == "peak_height"
         phase_array = estimate_phase_array_peaks(t, x, events; use_prominence=false)
     elseif method == "peak_prominence"
         phase_array = estimate_phase_array_peaks(t, x, events; use_prominence=true)
@@ -178,10 +178,14 @@ Estimate entrainment phase based on the circular cross-correlation.
 - `x`: Data vector or matrix, where each column represents one data vector.
 - `events`: Events matrix with two columns representing a square signal.
 
+**Keyword Arguments**
+- `use_fft`: If `true`, the cross-correlation is calculated using the fast
+    Fourier transform algorithm. Default value is `false`.
+
 **Returns**
 - `phase_array`: Array of phases estimated at each cycle of the input data.
 """
-function estimate_phase_array_cxcorr(t, x, events)
+function estimate_phase_array_cxcorr(t, x, events; use_fft=false)
 
     fun = events_to_function(events)
     y = fun.(t)
@@ -195,7 +199,7 @@ function estimate_phase_array_cxcorr(t, x, events)
         if sum(window_idices) == 0
             push!(phase_array, NaN)
         else
-            r = cxcorr(x[window_idices], y[window_idices])
+            r = cxcorr(x[window_idices], y[window_idices]; use_fft=use_fft)
             _, max_index = findmax(r)
             phase = (max_index - 1) / sum(window_idices)
             push!(phase_array, phase)
@@ -471,28 +475,28 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
 
         elseif property_name == "phase_coherence"
             if isnothing(phase_coherence)
-                phase_array = estimate_phase_array(t, x, events; method="peak_heights")  # peak_heights, cxcorr
+                phase_array = estimate_phase_array(t, x, events; method="peak_height")
                 phase_coherence, mean_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = phase_coherence
             
         elseif property_name == "mean_phase"
             if isnothing(mean_phase)
-                phase_array = estimate_phase_array(t, x, events; method="peak_heights")
+                phase_array = estimate_phase_array(t, x, events; method="peak_height")
                 phase_coherence, mean_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = mean_phase
 
         elseif property_name == "phase_coherence_population"
             if isnothing(phase_coherence_population)
-                phase_array = estimate_phase_array(t, U, events; method="peak_heights")
+                phase_array = estimate_phase_array(t, U, events; method="peak_height")
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = phase_coherence_population
 
         elseif property_name == "collective_phase"    
             if isnothing(collective_phase)
-                phase_array = estimate_phase_array(t, U, events; method="peak_heights")
+                phase_array = estimate_phase_array(t, U, events; method="peak_height")
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = collective_phase
@@ -528,6 +532,10 @@ Generate a function that simulates a model population and apply metrics to the
 - `variable_y`: The second variable for the phase plane (default 2).
 - `single_cells`: If `true`, parameters for single cells are also estimated. 
     Default value is `false`.
+- `subpopulations`: An array indicating the size of subpoopulations, for which
+    the parameters are also estimated. For example `[1, 10, 100]` will calculate
+    the parameter values also for populations of size 1, 10, and 100. Default
+    value is `Int64[]`.
 - `show_plots`: Show plots for visual verification (default `false`).
 - `kwargs...`: Keyword arguments passed to `simulate_population`.
 
@@ -538,7 +546,7 @@ Generate a function that simulates a model population and apply metrics to the
 """
 function create_simulation_function(property_names=nothing; transient=0.9,
     trajectories=1, cycle_samples=10, variable_x=1, variable_y=2,
-    single_cells=false, show_plots=false, kwargs...)
+    single_cells=false, subpopulations=Int64[], show_plots=false, kwargs...)
 
     simulation_function = function (model=nothing; show_plots=show_plots)
 
@@ -551,6 +559,10 @@ function create_simulation_function(property_names=nothing; transient=0.9,
                     extended_names = [x * "_$(i)" for x in property_names]
                     append!(property_names_output, extended_names)    
                 end
+            end
+            for subpopulation in subpopulations
+                extended_names = [x * "_n$(subpopulation)" for x in property_names]
+                append!(property_names_output, extended_names)    
             end
             return property_names_output
         end
@@ -583,6 +595,7 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         property_values = _estimate_entrainment_properties(solution;
             variable_x=variable_x, variable_y=variable_y,
             property_names=property_names)
+
         if single_cells
             for i in 1:trajectories
                 solution_subset = select_subset(solution, i)
@@ -593,6 +606,16 @@ function create_simulation_function(property_names=nothing; transient=0.9,
                 append!(property_values, property_values_subset)
             end
         end
+
+        for subpopulation in subpopulations
+            solution_subset = select_subset(solution, 1:subpopulation)
+            property_values_subset = _estimate_entrainment_properties(
+                solution_subset;
+                variable_x=variable_x, variable_y=variable_y,
+                property_names=property_names)
+            append!(property_values, property_values_subset)
+        end
+            
         return property_values
 
     end
