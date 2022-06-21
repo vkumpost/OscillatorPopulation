@@ -20,6 +20,73 @@ end
 
 
 """
+`xcorr`
+
+Compute cross-correlation. This is a particular implementation of the
+cross-correlation function that assumes that `x` is shorter than `y`. `x` is
+moved along `y` and the cross-correlation function is calculated as weighted
+moving average, where `x` are the weights and `y` is the averaged signal.
+
+**Arguments**
+- `x`: A signal array.
+- `y`: A signal array.
+
+**Returns**
+- `r`: Cross-correlation of `x` and `y`.
+"""
+function xcorr(x, y)
+
+    nx = length(x)
+    ny = length(y)
+
+    if nx > ny
+        msg = "x must be shorter than y!"
+        err = OscillatorPopulationError(msg)
+        throw(err)
+    end
+
+    nr = ny - nx + 1
+
+    r = fill(NaN, nr)
+    lags = 0:(nr-1)
+    for lag in lags
+        y_window = y[(lag+1):(lag+nx)]
+        r[lag + 1] = sum(x .* y_window)
+    end
+
+    return r
+
+end
+
+
+"""
+`xcorr`
+
+Compute autocorrelation.
+
+**Arguments**
+- `x`: A signal array.
+
+**Keyword Arguments**
+- `window_length`: Length of the window taken from the beginning of `x` and used
+    as a moving vector to calculate the cross-correlation (see `xcorr(x, y)`).
+    The length is given as fraction of the length of `x`. Default value is 0.5.
+
+**Returns**
+- `r`: Autocorrelation of `x`.
+"""
+function xcorr(x; window_length=0.5)
+
+    nx = length(x)
+    n_window = round(Int64, window_length * nx)
+    x_window = x[1:n_window]
+    r = xcorr(x_window, x)
+    return r
+
+end
+
+
+"""
 `cxcorr`
 
 Compute circular cross-correlation.

@@ -14,6 +14,33 @@
 
 end
 
+@testset "xcorr" begin
+
+    # Cross-correlation
+    x = [0, 1, 2, -1]
+    y = [0, 1, 1, 0, 0, 5, 8, 12, -2, 3, 0, 0, 1, 2]
+    r = xcorr(x, y)
+    @test r ≈ [3, 1, -5, 2, 9, 34, 5, 4, 3, -1, 0]
+
+    x = [0, 1, 2, -1]
+    y = [1, 2, 1, 5]
+    r = xcorr(x, y)
+    @test r ≈ [-1]
+
+    x = [0, 1, 2, -1]
+    y = [1, 2, 1]
+    @test_throws OscillatorPopulationError xcorr(x, y)
+
+    # Autocorrelation
+    x = [0, 1, 1, 0, 0, -5, 8, 12]
+    r = xcorr(x)
+    @test r ≈ [2, 1, 0, -5, 3]
+
+    r = xcorr(x, window_length=0.75)
+    @test r ≈ [27, -39, -60]
+
+end
+
 @testset "cxcorr" begin
 
     x = [0, 0, 1, 1, 0]
