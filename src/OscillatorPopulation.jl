@@ -32,7 +32,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `estimate_order_parameter`: Estimate Kuramoto's order parameter.
 - `estimate_period`: Estimate period.
 - `estimate_winding_number`: Estimate winding number.
-- `estimate_winding_number_period`: Estimate period based on the winding number.
+- `estimate_period_winding_number`: Estimate period based on the winding number.
 - `create_simulation_function`: Generate a simulation function.
 
 **Miscellaneous**
@@ -96,7 +96,7 @@ include("exceptions.jl")
 export cmean, xcorr, cxcorr, estimate_phase_array,
     estimate_phase_array_peaks, estimate_phase_array_cxcorr,
     estimate_order_parameter, estimate_period, estimate_winding_number,
-    estimate_winding_number_period, create_simulation_function
+    estimate_period_winding_number, create_simulation_function
 include("metrics.jl")
 
 export smooth

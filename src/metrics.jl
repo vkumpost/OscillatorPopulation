@@ -462,7 +462,7 @@ end
 
 
 """
-`estimate_winding_number_period`
+`estimate_period_winding_number`
 
 Estimate period based on the winding number.
 
@@ -478,7 +478,7 @@ Estimate period based on the winding number.
 **Returns**
 - `period`: Estimated period.
 """
-function estimate_winding_number_period(x, y, time_duration; remove_mean=true)
+function estimate_period_winding_number(x, y, time_duration; remove_mean=true)
 
     winding_number = estimate_winding_number(x, y; remove_mean=remove_mean)
     period = time_duration / winding_number
@@ -537,7 +537,7 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
         elseif property_name == "winding_number"
             time_duration = maximum(t) - minimum(t)
             input_period = events[3, 1] - events[2, 1]
-            winding_number_period = estimate_winding_number_period(x, y, time_duration)
+            winding_number_period = estimate_period_winding_number(x, y, time_duration)
             property_values[i_property] = input_period / winding_number_period
 
         elseif property_name == "phase_coherence"

@@ -257,24 +257,24 @@ end
 
 end
 
-@testset "estimate_winding_number_period" begin
+@testset "estimate_period_winding_number" begin
     
     # Half loop
     x = [0, 1, 0]
     y = [-1, 0, 1]
-    period = estimate_winding_number_period(x, y, 0.5; remove_mean=false)
+    period = estimate_period_winding_number(x, y, 0.5; remove_mean=false)
     @test period ≈ 1
-    period = estimate_winding_number_period(x, y, 2; remove_mean=false)
+    period = estimate_period_winding_number(x, y, 2; remove_mean=false)
     @test period ≈ 4
-    period = estimate_winding_number_period(x, y, 0.25; remove_mean=false)
+    period = estimate_period_winding_number(x, y, 0.25; remove_mean=false)
     @test period ≈ 0.5
 
     # remove_mean option
     x = [ 0, 1, 0, -1,  0] .+ 10
     y = [-0.5, 0, 1,  0, -0.5]
-    period = estimate_winding_number_period(x, y, 2; remove_mean=true)
+    period = estimate_period_winding_number(x, y, 2; remove_mean=true)
     @test period ≈ 2
-    period = estimate_winding_number_period(x, y, 2; remove_mean=false)
+    period = estimate_period_winding_number(x, y, 2; remove_mean=false)
     @test period > 2
 
 end
