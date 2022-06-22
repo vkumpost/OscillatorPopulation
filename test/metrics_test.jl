@@ -287,19 +287,19 @@ end
     set_solver!(model, saveat=1.0)
     fun = create_simulation_function(; transient=0.5, variable_x=2, variable_y=1)
     names = fun()
-    @test names == ["minimum", "maximum", "amplitude", "rms", "winding_number",
-        "phase_coherence", "mean_phase", "phase_coherence_population",
-        "collective_phase"]
+    @test names == ["minimum", "maximum", "amplitude", "rms",
+        "winding_number", "autocorrelation",
+        "phase_coherence", "mean_phase",
+        "phase_coherence_cxcorr", "mean_phase_cxcorr",
+        "phase_coherence_population", "collective_phase"]
     
     properties = fun(model)
     @test properties[1] == 4
     @test properties[2] == 8
     @test properties[3] == 4
-    @test 1 < properties[4] < 1.5
-    @test 0 < properties[5]
-    @test isnan(properties[6])
-    @test isnan(properties[7])
-    @test isnan(properties[8])
-    @test isnan(properties[9])
+
+    fun = create_simulation_function(["rms", "mean_phase_cxcorr"])
+    names = fun()
+    @test names == ["rms", "mean_phase_cxcorr"]
 
 end

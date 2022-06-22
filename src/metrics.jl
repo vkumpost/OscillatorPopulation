@@ -489,7 +489,9 @@ end
 
 function _estimate_entrainment_properties()
     property_names = ["minimum", "maximum", "amplitude", "rms",
-            "winding_number", "phase_coherence", "mean_phase",
+            "winding_number", "autocorrelation",
+            "phase_coherence", "mean_phase",
+            "phase_coherence_cxcorr", "mean_phase_cxcorr",
             "phase_coherence_population", "collective_phase"]
     return property_names
 end
@@ -515,6 +517,8 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
     # Variables to save properties, so they do not be estimated repeatedly
     phase_coherence = nothing
     mean_phase = nothing
+    phase_coherence_cxcorr = nothing
+    mean_phase_cxcorr = nothing
     phase_coherence_population = nothing
     collective_phase = nothing
 
@@ -536,9 +540,14 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
 
         elseif property_name == "winding_number"
             time_duration = maximum(t) - minimum(t)
-            input_period = events[3, 1] - events[2, 1]
             winding_number_period = estimate_period_winding_number(x, y, time_duration)
-            property_values[i_property] = input_period / winding_number_period
+            input_period = events[3, 1] - events[2, 1]
+            property_values[i_property] = winding_number_period / input_period
+
+        elseif property_name == "autocorrelation"
+            autocorrelation_period, _ = estimate_period(t, x)
+            input_period = events[3, 1] - events[2, 1]
+            property_values[i_property] = autocorrelation_period / input_period
 
         elseif property_name == "phase_coherence"
             if isnothing(phase_coherence)
@@ -553,6 +562,20 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
                 phase_coherence, mean_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = mean_phase
+
+        elseif property_name == "phase_coherence_cxcorr"
+            if isnothing(phase_coherence_cxcorr)
+                phase_array = estimate_phase_array(t, x, events; method="cxcorr")
+                phase_coherence_cxcorr, mean_phase_cxcorr = estimate_order_parameter(phase_array)
+            end
+            property_values[i_property] = phase_coherence_cxcorr
+
+        elseif property_name == "mean_phase_cxcorr"
+            if isnothing(mean_phase_cxcorr)
+                phase_array = estimate_phase_array(t, x, events; method="cxcorr")
+                phase_coherence_cxcorr, mean_phase_cxcorr = estimate_order_parameter(phase_array)
+            end
+            property_values[i_property] = mean_phase_cxcorr
 
         elseif property_name == "phase_coherence_population"
             if isnothing(phase_coherence_population)
@@ -619,7 +642,9 @@ function create_simulation_function(property_names=nothing; transient=0.9,
 
         # Return property names, if the model was not passed
         if isnothing(model)
-            property_names = _estimate_entrainment_properties()
+            if isnothing(property_names)
+                property_names = _estimate_entrainment_properties()
+            end
             property_names_output = deepcopy(property_names)
             if single_cells
                 for i in 1:trajectories
