@@ -310,11 +310,13 @@ Plot Arnold tongue or onion.
 - `colorbar_label`: Label for the colorbar.
 - `colormap`: Select colormap. For example `"twilight"` for cyclic data. Default
     value is `"viridis"`.
+- `figure_title`: String to be displayed as the figure title.
 - `ax`: PyPlot axes.
 """
 function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_name=nothing,
     error_range=nothing, fixed_value=nothing, color_limits=nothing,
-    show_colorbar=true, colorbar_label=nothing, colormap="viridis", ax=gca())
+    show_colorbar=true, colorbar_label=nothing, colormap="viridis", 
+    figure_title=nothing, ax=gca())
 
     if type == "tongue"
         x_axis_name = "input_period"
@@ -384,16 +386,26 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
     end
 
     # Label axes
+    if !isnothing(figure_title)
+        ax.set_title(figure_title, loc="left", pad=0)
+    end
+
     if type == "tongue"
-        ax.set_title("Arnold tongue", loc="left", pad=0)
+        if isnothing(figure_title)
+            ax.set_title("Arnold tongue", loc="left", pad=0)
+        end
         ax.set_xlabel("Input period", labelpad=0)
         ax.set_ylabel("Input amplitude", labelpad=0)
     elseif type == "onion"
-        ax.set_title("Arnold onion", loc="left", pad=0)
+        if isnothing(figure_title)
+            ax.set_title("Arnold onion", loc="left", pad=0)
+        end
         ax.set_xlabel("Input period", labelpad=0)
         ax.set_ylabel("Input duty cycle", labelpad=0)
     elseif type == "duty_cycle_tongue"
-        ax.set_title("Arnold tongue (duty cycle)", loc="left", pad=0)
+        if isnothing(figure_title)
+            ax.set_title("Arnold tongue (duty cycle)", loc="left", pad=0)
+        end
         ax.set_xlabel("Input duty cycle", labelpad=0)
         ax.set_ylabel("Input amplitude", labelpad=0)
     end
