@@ -76,6 +76,7 @@ using Random
 using Statistics
 using StatsBase
 
+import BlackBoxOptim
 import ProgressMeter
 import XLSX
 
