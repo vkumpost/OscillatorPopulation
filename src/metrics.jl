@@ -152,7 +152,7 @@ discarted.
 - `method`: Choose method to estimate the phase. Possible options are 
     `"peak_height"` (default), `"peak_prominence"`, and `"cxcorr"`.
 - `smooth_span`: Length of the moving average filter (in samples) used to average
-    `x` before the phase is estimated.
+    `x` before the phase is estimated. Default value is 1 (no smoothing).
 - `show_plots`: [NOT IMPLEMENTED]
 
 **Returns**
@@ -497,7 +497,7 @@ function _estimate_entrainment_properties()
 end
 
 
-function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, property_names=nothing)
+function _estimate_entrainment_properties(solution; smooth_span=1, variable_x=1, variable_y=2, property_names=nothing)
 
     if isnothing(property_names)
         property_names = _estimate_entrainment_properties()
@@ -510,6 +510,11 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
     y = solution.mean[:, variable_y]
     U = solution.trajectories[:, variable_x, :]
     events = solution.events
+
+    if smooth_span > 1
+        x = smooth(x, span=smooth_span)
+        y = smooth(y, span=smooth_span)
+    end
 
     # Initialize vector for the estimated properties
     property_values = fill(NaN, n_properties)
@@ -579,14 +584,14 @@ function _estimate_entrainment_properties(solution; variable_x=1, variable_y=2, 
 
         elseif property_name == "phase_coherence_population"
             if isnothing(phase_coherence_population)
-                phase_array = estimate_phase_array(t, U, events; method="peak_height")
+                phase_array = estimate_phase_array(t, U, events; method="peak_height", smooth_span=smooth_span)
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = phase_coherence_population
 
         elseif property_name == "collective_phase"    
             if isnothing(collective_phase)
-                phase_array = estimate_phase_array(t, U, events; method="peak_height")
+                phase_array = estimate_phase_array(t, U, events; method="peak_height", smooth_span=smooth_span)
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = collective_phase
@@ -618,6 +623,8 @@ Generate a function that simulates a model population and apply metrics to the
     effects (default 0.9).
 - `trajectories`: Number of trajectories in the population (default 1).
 - `cycle_samples`: The number of samples within one cycle (default 10).
+- `smooth_span`: Smooth the time series using running average of length
+    `smooth_span`. Default value is 1 (no smoothing).
 - `variable_x`: Trajectory that is used to calculate the metrics (default 1).
 - `variable_y`: The second variable for the phase plane (default 2).
 - `single_cells`: If `true`, parameters for single cells are also estimated. 
@@ -635,7 +642,7 @@ Generate a function that simulates a model population and apply metrics to the
     not passed, the function returns the metric names as an array of strings.
 """
 function create_simulation_function(property_names=nothing; transient=0.9,
-    trajectories=1, cycle_samples=10, variable_x=1, variable_y=2,
+    trajectories=1, cycle_samples=10, smooth_span=1, variable_x=1, variable_y=2,
     single_cells=false, subpopulations=Int64[], show_plots=false, kwargs...)
 
     simulation_function = function (model=nothing; show_plots=show_plots)
@@ -684,17 +691,24 @@ function create_simulation_function(property_names=nothing; transient=0.9,
             ax.set_title("Mean")
         end
 
-        property_values = _estimate_entrainment_properties(solution;
-            variable_x=variable_x, variable_y=variable_y,
-            property_names=property_names)
+        property_values = _estimate_entrainment_properties(
+            solution;
+            smooth_span=smooth_span,
+            variable_x=variable_x,
+            variable_y=variable_y,
+            property_names=property_names
+        )
 
         if single_cells
             for i in 1:trajectories
                 solution_subset = select_subset(solution, i)
                 property_values_subset = _estimate_entrainment_properties(
                     solution_subset;
-                    variable_x=variable_x, variable_y=variable_y,
-                    property_names=property_names)
+                    smooth_span=smooth_span,
+                    variable_x=variable_x,
+                    variable_y=variable_y,
+                    property_names=property_names
+                )
                 append!(property_values, property_values_subset)
             end
         end
@@ -703,8 +717,11 @@ function create_simulation_function(property_names=nothing; transient=0.9,
             solution_subset = select_subset(solution, 1:subpopulation)
             property_values_subset = _estimate_entrainment_properties(
                 solution_subset;
-                variable_x=variable_x, variable_y=variable_y,
-                property_names=property_names)
+                smooth_span=smooth_span,
+                variable_x=variable_x,
+                variable_y=variable_y,
+                property_names=property_names
+            )
             append!(property_values, property_values_subset)
         end
             
