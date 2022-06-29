@@ -633,6 +633,10 @@ Generate a function that simulates a model population and apply metrics to the
     the parameters are also estimated. For example `[1, 10, 100]` will calculate
     the parameter values also for populations of size 1, 10, and 100. Default
     value is `Int64[]`.
+- `average_subpopulations`: If `true` (default), the subpopulations are averaged
+    over all subpopulations that can fit the main population. For example
+    subpopulation of size `100` can be extracted 10-times from the main
+    population of 1000 without overlaps.
 - `show_plots`: Show plots for visual verification (default `false`).
 - `kwargs...`: Keyword arguments passed to `simulate_population`.
 
@@ -643,7 +647,8 @@ Generate a function that simulates a model population and apply metrics to the
 """
 function create_simulation_function(property_names=nothing; transient=0.9,
     trajectories=1, cycle_samples=10, smooth_span=1, variable_x=1, variable_y=2,
-    single_cells=false, subpopulations=Int64[], show_plots=false, kwargs...)
+    single_cells=false, subpopulations=Int64[], average_subpopulations=true,
+    show_plots=false, kwargs...)
 
     simulation_function = function (model=nothing; show_plots=show_plots)
 
@@ -714,15 +719,35 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         end
 
         for subpopulation in subpopulations
-            solution_subset = select_subset(solution, 1:subpopulation)
-            property_values_subset = _estimate_entrainment_properties(
-                solution_subset;
-                smooth_span=smooth_span,
-                variable_x=variable_x,
-                variable_y=variable_y,
-                property_names=property_names
-            )
-            append!(property_values, property_values_subset)
+
+            property_values_subset_mean = nothing
+            counter = 0
+            if average_subpopulations
+                sub_start = 1
+                sub_end = subpopulation
+            else
+                sub_start = trajectories - subpopulation + 1
+                sub_end = trajectories
+            end
+            while sub_end <= trajectories
+                solution_subset = select_subset(solution, sub_start:sub_end)
+                property_values_subset = _estimate_entrainment_properties(
+                    solution_subset;
+                    smooth_span=smooth_span,
+                    variable_x=variable_x,
+                    variable_y=variable_y,
+                    property_names=property_names
+                )
+                if isnothing(property_values_subset_mean)
+                    property_values_subset_mean = property_values_subset
+                else
+                    property_values_subset_mean .+= property_values_subset
+                end
+                counter += 1
+                sub_start = sub_end + 1
+                sub_end = sub_start + subpopulation - 1
+            end
+            append!(property_values, property_values_subset_mean ./ counter)
         end
             
         return property_values
