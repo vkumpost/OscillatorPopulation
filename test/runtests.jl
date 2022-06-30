@@ -36,6 +36,10 @@ end
     include("model_test.jl")
 end
 
+@testset "optimization" begin
+    include("optimization_test.jl")
+end
+
 @testset "population" begin
     include("population_test.jl")
 end

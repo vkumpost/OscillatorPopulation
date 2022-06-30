@@ -53,6 +53,9 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `print_info`: Print model information (initial conditions, parameter values, ...)
 - `simulate_model`: Perform a numerical simulation.
 
+**Optimization**
+- `estimate_initial_conditions`: Preestimate initial conditions for a model.
+
 **Population Simulation**
 - `simulate_population`: Simulate an uncoupled population.
 - `plot_solution`: Plot results of a simulation.
@@ -110,6 +113,9 @@ export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
     get_parameter_index, get_parameter, set_parameter!, set_input!, print_info,
     simulate_model
 include("model.jl")
+
+export estimate_initial_conditions
+include("optimization.jl")
 
 export simulate_population, plot_solution, select_time, select_subset
 include("population.jl")
