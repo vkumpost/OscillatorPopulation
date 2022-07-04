@@ -11,6 +11,7 @@ Load a model from the library.
     - `van-der-pol`
     - `kim-forger`
     - `kim-forger-full`
+    - `hasty`
 
 **Optional Arguments**
 - `problem_type`: "ode", "sde", or "jump".
@@ -29,6 +30,8 @@ function load_model(model_name::String, problem_type::String="ode"; kwargs...)
         model = _load_kim_forger(problem_type)
     elseif model_name == "kim-forger-full"
         model = _load_kim_forger_full(problem_type)
+    elseif model_name == "hasty"
+        model = _load_hasty(problem_type)
     else
         err = OscillatorPopulationError("`$model_name` is not in the model library!")
         throw(err)
@@ -634,5 +637,93 @@ function _load_kim_forger_full(problem_type)
         
     return model
 
+
+end
+
+
+"""
+`_load_hasty`
+
+Load the Hasty model.
+
+**References**
+- Hasty J, Dolnik M, Rottschäfer V, Collins JJ. "Synthetic gene network for
+    entraining and amplifying cellular oscillations." Physical Review Letters 88
+    (2002). https://doi.org/10.1103/PhysRevLett.88.148101
+"""
+function _load_hasty(problem_type)
+
+    function model!(du, u, p, t)
+
+        # Variables
+        x, y = u
+
+        # Parameters
+        α, β, ay, dx, dy, I = p
+
+        # Equations
+        F = (1 + x^2 + α*β*x^4) / ((1 + x^2 + β*x^4)*(1 + y^4))
+        du[1] = dx = F -  dx*x + I
+        du[2] = dy = ay * F - dy*y
+
+    end
+
+    function noise!(du, u, p, t)
+
+        # Variables
+        x, y = u
+        
+        # Parameters
+        α, β, ay, dx, dy, I, σ = p
+
+        # Equations
+        du[1] = σ
+        du[2] = σ
+
+    end
+
+    # Common variables for all model types
+    tspan = (0.0, 300.0)
+    variable_names = ["x", "y"]
+    parameter_names = ["α", "β", "ay", "dx", "dy", "I"]
+    p = [11.0, 2.0, 0.2, 0.2, 0.012, 0.0]
+    u0 = [0.1, 0.1]
+    input = (Matrix{Float64}(undef, 0, 0), "")
+    output = sol -> Matrix(sol[:, :]')
+        
+    if problem_type == "ode"
+        
+        # Create an ODE problem
+        problem = ODEProblem(model!, u0, tspan, p)
+    
+        # Set solver parameters
+        solver_algorithm = DP5()
+        solver_parameters = (saveat=0.01,)
+
+    elseif problem_type == "sde"
+
+        # Extend parameters by the noise intensity
+        push!(parameter_names, "σ")
+        push!(p, 0.01)
+
+        # Create an SDE problem
+        problem = SDEProblem(model!, noise!, u0, tspan, p)
+                
+        # Set solver parameters
+        solver_algorithm = SOSRI()
+        solver_parameters = (saveat=0.01,)
+
+    else
+
+        msg = "Problem type `$problem_type` not implemented! Use `ode` or `sde`."
+        err = OscillatorPopulationError(msg)
+        throw(err)
+
+    end
+
+    model = Model(variable_names, parameter_names, problem, solver_algorithm,
+        solver_parameters, input, output)
+        
+    return model
 
 end
