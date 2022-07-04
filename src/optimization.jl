@@ -172,3 +172,59 @@ function create_data_objective(model, t, x, events=nothing; trajectories=1,
     return cost_function
 
 end
+
+
+"""
+`optimize`
+
+Optimize a cost function.
+
+**Arguments**
+- `cost_function`: Function to be minimized. It takes a vector of parameter
+    values as input and outputs the cost function value.
+
+**Keyword Arguments**
+- `search_range`: Vector of tuples that specify the search range for the
+    individual parameters. This keyword argument must be passed!
+- `max_steps`: The maximal number of steps that the optimizer can take.
+- `initial_population`: Initial population passed to the optimizer. The rows
+    are individuals and columns are parameter values.
+- `trace_mode`: `:compact` (defualt), `:silent` or `:verbose`.
+
+**Returns**
+- `best_candidate`: A vector representing the best candidate solution.
+- `final_population`: The final population of candidates.
+"""
+function optimize(cost_function; search_range=nothing, max_steps=nothing,
+    initial_population=nothing, trace_mode=nothing)
+
+    optimizer_kwargs = Dict{Symbol, Any}(
+        :TraceMode => :compact,
+    )
+
+    if !isnothing(search_range)
+        optimizer_kwargs[:SearchRange] = search_range
+        optimizer_kwargs[:NumDimensions] = length(search_range)
+    end
+
+    if !isnothing(max_steps)
+        optimizer_kwargs[:MaxSteps] = max_steps
+    end
+
+    if !isnothing(initial_population)
+        optimizer_kwargs[:PopulationSize] = size(initial_population, 1)
+        optimizer_kwargs[:Population] = Matrix(transpose(initial_population))
+    end
+
+    if !isnothing(trace_mode)
+        optimizer_kwargs[:TraceMode] = trace_mode
+    end
+
+    res = BlackBoxOptim.bboptimize(cost_function; optimizer_kwargs...)
+
+    best_candidate = BlackBoxOptim.best_candidate(res)
+    final_population = Matrix(transpose(BlackBoxOptim.population(res).individuals))
+
+    return best_candidate, final_population
+
+end

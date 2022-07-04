@@ -43,3 +43,29 @@ end
     @test err ≈ 10  # sum(([2 3; 1 2] .- [1 5; 2 4]).^2)
 
 end
+
+@testset "optimize" begin
+
+    cost_function = x -> (x[1] - 5)^2 + (x[2] - 4)^2
+    
+    search_range = [(4, 6), (3, 5)]
+    initial_population = [5.1 4.1; 4.9 3.9; 4.8 4.2; 5.2 3.8]
+    best_candidate, final_population = optimize(cost_function;
+        search_range=search_range,
+        max_steps=10_000,
+        initial_population=initial_population,
+        trace_mode=:silent
+    )
+    @test sum((best_candidate .- [5, 4]).^2) < 0.1
+    @test size(final_population) == (4, 2)
+
+    search_range = [(4, 6), (3, 5)]
+    best_candidate, final_population = optimize(cost_function;
+        search_range=search_range,
+        max_steps=10_000,
+        trace_mode=:silent
+    )
+    @test sum((best_candidate .- [5, 4]).^2) < 0.1
+    @test size(final_population) == (50, 2)
+
+end
