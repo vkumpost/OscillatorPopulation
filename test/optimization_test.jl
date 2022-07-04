@@ -25,3 +25,21 @@
     ]
 
 end
+
+@testset "create_data_objective" begin
+
+    model = create_dummy("ode")
+    
+    t = [5, 6]
+    x = [1 2; 5 4]
+    cost_function = create_data_objective(model, t, x; input_parameter_name="c")
+    err = cost_function([1, 2, 0])
+    @test err ≈ 157  # sum(([6 7; 10 12] .- [1 5; 2 4]).^2)
+
+    t = [1, 2]
+    x = [1 2; 5 4]
+    cost_function = create_data_objective(model, t, x; parameter_names=["b"], input_parameter_name="c")
+    err = cost_function([1])
+    @test err ≈ 10  # sum(([2 3; 1 2] .- [1 5; 2 4]).^2)
+
+end
