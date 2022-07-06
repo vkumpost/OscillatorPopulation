@@ -50,6 +50,12 @@ end
 
 end
 
+@testset "create_desynchronization_objective" begin
+    
+    @test create_desynchronization_objective isa Function
+
+end
+
 @testset "optimize" begin
 
     cost_function = x -> (x[1] - 5)^2 + (x[2] - 4)^2

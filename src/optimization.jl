@@ -299,6 +299,96 @@ end
 
 
 """
+`create_desynchronization_objective`
+
+Create a cost function for fitting noise intensity to the population-level 
+damping rate.
+
+**Arguments**
+- `model`: `Model`.
+- `damping_rate`: Damping rate of the damped sine fitted to the population-level
+    data.
+- `forcing_period`: Period of the forcing signal to entrain the population.
+
+**Keyword Arguments**
+- `trajectories`: Number of trajectories in the population. Default value is 1.
+- `noise_parameter_name`: Name of the noise parameter. Default value is `σ`.
+- `input_parameter_name`: Name of the input parameter. Default values is `I`.
+- `show_plots`: If `true`, plot the model simulation vs the data. Default value
+    is `false`.
+
+**Returns**
+- `cost_function`: A cost function that takes an array of parameter values as an
+    input argument and returns the squared error of the simulated damping rate
+    from the reference damping rate.
+"""
+function create_desynchronization_objective(model, damping_rate, forcing_period;
+    trajectories=1, noise_parameter_name="σ", input_parameter_name="I",
+    show_plots=false
+    )
+
+    # Create a copy of the input model
+    model = deepcopy(model)
+
+    events = create_events(:LD, 10, forcing_period/2, forcing_period/2)
+    min_time = 10*forcing_period
+    max_time = min_time + 5*forcing_period
+
+    # Configurate the model for data fitting
+    set_timespan!(model, max_time)
+    set_input!(model, events, input_parameter_name)
+    set_solver!(model, saveat=range(min_time, max_time, 100))
+
+    # Cost function
+    function cost_function(parameter_values; show_plots=show_plots)
+        
+        # Set parameters of the model
+        model2 = deepcopy(model)
+        set_parameter!(model2, noise_parameter_name, parameter_values[1])
+
+        # Simulate the model
+        solution = nothing
+        try
+            solution = simulate_population(model2, trajectories)
+            solution = select_time(solution, min_time=min_time)
+        catch err
+            @warn "Error during simulation:\n$(err)"
+            return Inf
+        end
+        if !solution.success
+            @warn "Unsuccessful simulation!"
+            return Inf
+        end
+
+        t = solution.time
+        x = zscore(solution.mean[:, 1])
+        T0 = forcing_period
+        A0 = maximum(x)
+        p0 = [A0, 0.0, T0, 0.0]
+        p = fit_curve(damped_sine, t, x, p0)
+        estimated_damping_rate = p[2]
+
+        # Show plot of the simulated trajectory vs the actual data
+        if show_plots
+
+            _, ax = subplots()
+            ax.plot(t, x, color="black", label="Simulation")
+            ax.plot(t, damped_sine(t, p), color="blue", label="Curve fit")
+            plot_events(solution.events, ax=ax)
+
+        end
+
+        # Return the squared error
+        return (estimated_damping_rate - damping_rate) ^2
+
+    end
+
+    return cost_function
+
+end
+
+
+"""
 `optimize`
 
 Optimize a cost function.
@@ -311,8 +401,10 @@ Optimize a cost function.
 - `search_range`: Vector of tuples that specify the search range for the
     individual parameters. This keyword argument must be passed!
 - `max_steps`: The maximal number of steps that the optimizer can take.
+- `population_size`: Population size.
 - `initial_population`: Initial population passed to the optimizer. The rows
-    are individuals and columns are parameter values.
+    are individuals and columns are parameter values. This option overwrites 
+    `population_size`, if both are passed.
 - `trace_mode`: `:compact` (defualt), `:silent` or `:verbose`.
 
 **Returns**
@@ -320,7 +412,7 @@ Optimize a cost function.
 - `final_population`: The final population of candidates.
 """
 function optimize(cost_function; search_range=nothing, max_steps=nothing,
-    initial_population=nothing, trace_mode=nothing)
+    population_size=nothing, initial_population=nothing, trace_mode=nothing)
 
     optimizer_kwargs = Dict{Symbol, Any}(
         :TraceMode => :compact,
@@ -333,6 +425,10 @@ function optimize(cost_function; search_range=nothing, max_steps=nothing,
 
     if !isnothing(max_steps)
         optimizer_kwargs[:MaxSteps] = max_steps
+    end
+
+    if !isnothing(population_size)
+        optimizer_kwargs[:PopulationSize] = population_size
     end
 
     if !isnothing(initial_population)

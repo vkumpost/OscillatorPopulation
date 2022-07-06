@@ -57,6 +57,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `estimate_initial_conditions`: Preestimate initial conditions for a model.
 - `create_data_objective`: Create a cost function to fit a model to data.
 - `create_entrainable_oscillator_objective`: A cost function to find parameters for an entrainmeble oscillator.
+- `create_desynchronization_objective`: A cost function to find noise intensity based on the population-level damping rate.
 - `optimize`: Minimize a cost function.
 - `damped_sine`: A damped sine function.
 - `polynomial`: Polynomial function.
@@ -122,7 +123,8 @@ export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
 include("model.jl")
 
 export estimate_initial_conditions, create_data_objective,
-    create_entrainable_oscillator_objective, optimize, damped_sine, polynomial,
+    create_entrainable_oscillator_objective, create_desynchronization_objective,
+    optimize, damped_sine, polynomial,
     fit_curve
 include("optimization.jl")
 
