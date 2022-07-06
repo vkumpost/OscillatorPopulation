@@ -84,3 +84,14 @@ end
     @test x ≈ [-1.539213246532194, 0.12482573436989124, -0.009413673996984902]
 
 end
+
+@testset "fit_curve" begin
+    
+    t = 0:0.01:10
+    p = [3, 0.1, 0.5, 1.5]
+    x = damped_sine(t, p)
+    p0 = [2.9, 0.15, 0.6, 1.4]
+    p_estimate = fit_curve(damped_sine, t, x, p0)
+    @test p ≈ p_estimate
+
+end

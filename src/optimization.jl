@@ -372,3 +372,26 @@ function damped_sine(t, p)
     x = A .* exp.(-d.*t) .* sin.( (2*pi*t) ./ T .+ θ)
     return x
 end
+
+
+"""
+`fit_curve`
+
+Fit curve to data.
+
+**Arguments**
+- `fun`: Function that takes two arguments, time vector and parameter values and
+    returns the evaluated function values for each time point.
+- `t`: Time vector.
+- `x`: Fitting data vector.
+- `p0`: Initial guess for the parameter values.
+        
+**Returns**
+- `p`: Fitted parameter values.
+"""
+function fit_curve(fun::Function, t, x, p0)
+
+    lsqfit = LsqFit.curve_fit(fun, t, x, p0)
+    return lsqfit.param
+
+end

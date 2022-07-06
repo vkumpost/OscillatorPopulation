@@ -59,6 +59,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `create_entrainable_oscillator_objective`: A cost function to find parameters for an entrainmeble oscillator.
 - `optimize`: Minimize a cost function.
 - `damped_sine`: A damped sine function.
+- `fit_curve`: Fit curve to data.
 
 **Population Simulation**
 - `simulate_population`: Simulate an uncoupled population.
@@ -120,7 +121,7 @@ export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
 include("model.jl")
 
 export estimate_initial_conditions, create_data_objective,
-    create_entrainable_oscillator_objective, optimize, damped_sine
+    create_entrainable_oscillator_objective, optimize, damped_sine, fit_curve
 include("optimization.jl")
 
 export simulate_population, plot_solution, select_time, select_subset
