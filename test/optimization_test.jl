@@ -85,6 +85,25 @@ end
 
 end
 
+@testset "polynomial" begin
+
+    t = [0.8, 1.4, 2.9]
+    p = Float64[]
+    x = polynomial(t, p)
+    @test x ≈ [0.0, 0.0, 0.0]
+
+    t = [0.8, 1.4, 2.9]
+    p = [3]
+    x = polynomial(t, p)
+    @test x ≈ [3.0, 3.0, 3.0]
+
+    t = [0.8, 1.4, 2.9]
+    p = [2, 6, 1]
+    x = polynomial(t, p)
+    @test x ≈ [7.44, 12.36, 27.81]
+
+end
+
 @testset "fit_curve" begin
     
     t = 0:0.01:10

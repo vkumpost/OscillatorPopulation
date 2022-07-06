@@ -375,6 +375,37 @@ end
 
 
 """
+`polynomial`
+
+Evaluated a polynomial function.
+
+**Arguments**
+- `t`: Time point or vector.
+- `p`: Vector of parameter values of form `p = [a₀, a₁, a₂, ...]` where the
+    parameters correspond to polynomial `a₀ + a₁t + a₂t² + ...`.
+        
+**Returns**
+- `x`: Values of the damped sine for the time points `t`.
+"""
+function polynomial(t, p)
+
+    nt = length(t)
+    np = length(p)
+
+    x = fill(0.0, nt)
+
+    for i = 1:nt
+        for j = 1:np
+            x[i] += p[j] * t[i]^(j-1)
+        end
+    end
+
+    return x
+
+end
+
+
+"""
 `fit_curve`
 
 Fit curve to data.
