@@ -83,6 +83,7 @@ using Statistics
 using StatsBase
 
 import BlackBoxOptim
+import LsqFit
 import ProgressMeter
 import XLSX
 
