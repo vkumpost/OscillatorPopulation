@@ -200,7 +200,11 @@ Select output variable for a model.
 """
 function set_output!(model::Model, index)
 
-    model.output = sol -> Matrix(sol[index, :]')
+    if length(index) == 1
+        model.output = sol -> Matrix(Matrix(sol[index, :]')')
+    else
+        model.output = sol -> Matrix(sol[index, :]')
+    end
     return model
 
 end

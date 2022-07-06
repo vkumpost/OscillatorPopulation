@@ -98,7 +98,14 @@ end
     set_output!(model, 2)
     sol = solve(model.problem, model.solver_algorithm; model.solver_parameters...)
     x = model.output(sol)
-    @test x ≈ Matrix(sol[2, :]')
+    @test x ≈ sol[2, :]
+
+    # Select both variables as output
+    model = create_dummy("ode")
+    set_output!(model, [1, 2])
+    sol = solve(model.problem, model.solver_algorithm; model.solver_parameters...)
+    x = model.output(sol)
+    @test x ≈ transpose(sol[:, :])
 
 end
 
