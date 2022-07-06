@@ -175,6 +175,130 @@ end
 
 
 """
+`create_entrainable_oscillator_objective`
+
+Create a cost function to find parameters for an entrainable limit cycle
+oscillator.
+
+**Arguments**
+- `model`: `Model`.
+- `reference_period`: Target period for oscillations.
+
+**Keyword Arguments**
+- `trajectories`: Number of trajectories in the population. Default value is 1.
+- `parameter_names`: Names of the model parameters to be optimized. By default,
+    all model parameters are optimized.
+- `input_parameter_name`: Default `I`.
+- `show_plots`: If `true`, plot the model simulation vs the data. Default value
+    is `false`.
+
+**Returns**
+- `cost_function`: A cost function that takes an array of parameter values as an
+    input argument and returns the squared error of the simulation from the data.
+"""
+function create_entrainable_oscillator_objective(model, reference_period;
+    trajectories=1, parameter_names=nothing, input_parameter_name="I",
+    show_plots=false)
+
+    model = deepcopy(model)
+
+    if isnothing(parameter_names)
+        parameter_names = model.parameter_names
+    end
+
+    max_time = reference_period * 20
+    min_time = reference_period * 10
+    set_timespan!(model, max_time)
+
+    function cost_function(parameter_values; show_plots=show_plots)
+
+        model2 = deepcopy(model)
+
+        # Free running period
+        set_parameter!(model2, parameter_names, parameter_values)
+        set_parameter!(model2, input_parameter_name, 0.0)
+
+        solution = nothing
+        try
+            solution = simulate_population(model2, trajectories)
+        catch e
+            return Inf
+        end
+        solution = select_time(solution, min_time=min_time)
+        t_dd = solution.time
+        x_dd = solution.mean[:, 1]
+        y_dd = solution.mean[:, 2]
+        amp_dd = (maximum(x_dd) - minimum(x_dd))
+        if amp_dd < 0.1
+            return Inf
+        end
+
+        period = estimate_period_winding_number(x_dd, y_dd, min_time)
+        E1 = abs(period - reference_period) / reference_period
+
+        # Entrainment
+        set_parameter!(model2, parameter_names, parameter_values)
+        events_original = create_events_cycle(max_time, reference_period)
+        
+        set_input!(model2, events_original, input_parameter_name)
+        solution = nothing
+        try
+            solution = simulate_population(model2, trajectories)
+        catch e
+            return Inf
+        end
+        solution = select_time(solution, min_time=min_time)
+        t_ld = solution.time
+        x_ld = solution.mean[:, 1]
+        amd_ld = maximum(x_ld) - minimum(x_ld)
+        events_ld = solution.events
+        phase_array = estimate_phase_array_peaks(t_ld, x_ld, events_ld)
+        if length(phase_array) < 5
+            return Inf
+        else
+            phase_coherence1, collective_phase1 = estimate_order_parameter(phase_array)
+        end
+
+        set_input!(model2, events_original .+ period/2, input_parameter_name)
+        solution = nothing
+        try
+            solution = simulate_population(model2, trajectories)
+        catch e
+            return Inf
+        end
+        solution = select_time(solution, min_time=min_time)
+        t_ld2 = solution.time
+        x_ld2 = solution.mean[:, 1]
+        events_ld2 = solution.events
+        phase_array = estimate_phase_array_peaks(t_ld2, x_ld2, events_ld2)
+        if length(phase_array) < 5
+            return Inf
+        else
+            phase_coherence2, collective_phase2 = estimate_order_parameter(phase_array)
+        end
+
+        E2 = abs(collective_phase1 - collective_phase2) / period
+
+        if show_plots
+            fig, ax_array = subplots(3)
+            ax_array[1].plot(t_dd, x_dd, color="black")
+            ax_array[2].plot(t_ld, x_ld, color="black")
+            plot_events(events_ld, ax=ax_array[2])
+            ax_array[3].plot(t_ld2, x_ld2, color="black")
+            plot_events(events_ld2, ax=ax_array[3])
+            fig.tight_layout()
+        end
+
+        return E1 + E2
+
+    end
+
+    return cost_function
+
+end
+
+
+"""
 `optimize`
 
 Optimize a cost function.

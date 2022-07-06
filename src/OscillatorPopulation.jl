@@ -56,6 +56,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 **Optimization**
 - `estimate_initial_conditions`: Preestimate initial conditions for a model.
 - `create_data_objective`: Create a cost function to fit a model to data.
+- `create_entrainable_oscillator_objective`: A cost function to find parameters for an entrainmeble oscillator.
 - `optimize`: Minimize a cost function.
 
 **Population Simulation**
@@ -116,7 +117,8 @@ export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
     simulate_model
 include("model.jl")
 
-export estimate_initial_conditions, create_data_objective, optimize
+export estimate_initial_conditions, create_data_objective,
+    create_entrainable_oscillator_objective, optimize
 include("optimization.jl")
 
 export simulate_population, plot_solution, select_time, select_subset
