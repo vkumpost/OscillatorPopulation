@@ -75,3 +75,12 @@ end
     @test size(final_population) == (50, 2)
 
 end
+
+@testset "damped_sine" begin
+
+    t = [0.2, 1.1, 2.8]
+    p = [3, 2, 0.5, 1.5]
+    x = damped_sine(t, p)
+    @test x ≈ [-1.539213246532194, 0.12482573436989124, -0.009413673996984902]
+
+end

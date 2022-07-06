@@ -352,3 +352,23 @@ function optimize(cost_function; search_range=nothing, max_steps=nothing,
     return best_candidate, final_population
 
 end
+
+
+"""
+`damped_sine`
+
+Evaluated a damped sine function.
+
+**Arguments**
+- `t`: Time point or vector.
+- `p`: Vector of parameter values of form `p = [A, d, T, θ]` where `A` is
+    amplitude, `d` damping ratio, `T` period and `θ` phase.
+        
+**Returns**
+- `x`: Values of the damped sine for the time points `t`.
+"""
+function damped_sine(t, p)
+    A, d, T, θ = p
+    x = A .* exp.(-d.*t) .* sin.( (2*pi*t) ./ T .+ θ)
+    return x
+end
