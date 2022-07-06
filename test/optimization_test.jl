@@ -34,13 +34,13 @@ end
     x = [1 2; 5 4]
     cost_function = create_data_objective(model, t, x; input_parameter_name="c")
     err = cost_function([1, 2, 0])
-    @test err ≈ 157  # sum(([6 7; 10 12] .- [1 5; 2 4]).^2)
+    @test err ≈ 39.25  # sum(([6 7; 10 12] .- [1 5; 2 4]).^2) / 4
 
     t = [1, 2]
     x = [1 2; 5 4]
     cost_function = create_data_objective(model, t, x; parameter_names=["b"], input_parameter_name="c")
     err = cost_function([1])
-    @test err ≈ 10  # sum(([2 3; 1 2] .- [1 5; 2 4]).^2)
+    @test err ≈ 2.5  # sum(([2 3; 1 2] .- [1 5; 2 4]).^2) / 4
 
 end
 

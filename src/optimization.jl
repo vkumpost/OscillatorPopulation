@@ -164,8 +164,8 @@ function create_data_objective(model, t, x, events=nothing; trajectories=1,
 
         end
 
-        # Return the squared error
-        return sum( (x .- solution.mean) .^2 )
+        # Return the mean squared error
+        return mean( (x .- solution.mean) .^2 )
 
     end
 
