@@ -1,3 +1,26 @@
+@testset "rsquared" begin
+    
+    x = [1, 2, 3, 4]
+    R = rsquared(x, x)
+    @test R ≈ 1
+
+    x = [1, 2, 3, 4]
+    y = [1, 2, 2, 3]
+    R = rsquared(x, y)
+    @test 0 < R < 1
+
+    x = [0, 1, 0, -1, 0]
+    y = [0, 0, 0,  0, 0]
+    R = rsquared(x, y)
+    @test R ≈ 0
+
+    x = [0, 1, 0, -1, 0]
+    y = [0, 0, -2, 20, 50]
+    R = rsquared(x, y)
+    @test R < 0
+
+end
+
 @testset "cmean" begin
 
     x = [-2, -1, 0, 1, 2, 3]

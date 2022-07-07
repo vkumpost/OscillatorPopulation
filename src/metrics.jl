@@ -1,4 +1,30 @@
 """
+`rsquared`
+
+Calculate the coefficient of determination.
+
+**Arguments**
+- `x`: Vector of real data.
+- `y`: Vector of predicted values.
+
+**Returns**
+- `R`: The coefficient of determination as a number on the interval `[-∞, 1]`.
+
+**Reference**
+- https://doi.org/10.1016/0022-1694(70)90255-6
+"""
+function rsquared(x, y)
+
+    μ = mean(x)
+    SSres = sum((x .- y).^2)
+    SStot = sum((x .- μ).^2)
+    R = 1 - SSres/SStot
+    return R
+
+end
+
+
+"""
 `cmean`
 
 Compute circular mean of an array.

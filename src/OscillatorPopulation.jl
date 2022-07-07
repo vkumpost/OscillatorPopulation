@@ -22,6 +22,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `OscillatorPopulationError`: A general exeption if something goes wrong.
 
 **Metrics**
+- `rsquared`: The coefficient of determination.
 - `cmean`: Circular mean.
 - `xcorr`: Cross-correlation.
 - `cxcorr`: Circular cross-correlation.
@@ -105,7 +106,7 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export cmean, xcorr, cxcorr, estimate_phase_array,
+export rsquared, cmean, xcorr, cxcorr, estimate_phase_array,
     estimate_phase_array_peaks, estimate_phase_array_cxcorr,
     estimate_order_parameter, estimate_period, estimate_winding_number,
     estimate_period_winding_number, create_simulation_function
