@@ -121,46 +121,21 @@ Compute circular cross-correlation.
 - `x`: Array representing one period of a signal.
 - `y`: Array representing one period of a signal.
 
-**Keyword Arguments**
-- `use_fft`: If `true`, the cross-correlation is calculated using the fast
-    Fourier transform algorithm. Default value is `false`.
-
 **Returns**
-- `r`: Circular cross-correlation of `x` and `y`.
+- `r`: Circular cross-correlation of `x` and `y`. Normalized so
+    the maximum of `r` is 1.
 """
-function cxcorr(x, y; use_fft=false)
+function cxcorr(x, y)
 
-    if use_fft
-        
-        n = length(x)
-
-        # p = plan_rfft(zeros(n); flags=FFTW.PATIENT)
-        # x_fft = p*x
-        # y_fft = p*y
-        x_fft = rfft(x)
-        y_fft = rfft(y)
-        
-        S = x_fft .* conj(y_fft)
-
-        # nS = length(S)
-        # ip = plan_irfft(zeros(ComplexF64, nS), n; flags=FFTW.PATIENT)
-        # r = ip*S
-        r = irfft(S, n)
-
-    else
-        n = length(x)
-        r = fill(NaN, n)
-        lags = 0:(n-1)
-        for lag in lags
-            x_circ = x[[(lag+1):end...; 1:lag...]]
-            r[lag + 1] = sum(x_circ .* y)
-        end
-    end
+    nx = length(x)
+    xx = vcat(x, fill(0, nx))
+    yy = vcat(y, y)
+    r = crosscov(xx, yy, 0:(nx-1); demean=false)
+    r ./= maximum(r)
 
     return r
 
 end
-
 
 """
 `estimate_phase_array`
@@ -271,14 +246,10 @@ Estimate entrainment phase based on the circular cross-correlation.
 - `x`: Data vector or matrix, where each column represents one data vector.
 - `events`: Events matrix with two columns representing a square signal.
 
-**Keyword Arguments**
-- `use_fft`: If `true`, the cross-correlation is calculated using the fast
-    Fourier transform algorithm. Default value is `false`.
-
 **Returns**
 - `phase_array`: Array of phases estimated at each cycle of the input data.
 """
-function estimate_phase_array_cxcorr(t, x, events; use_fft=false)
+function estimate_phase_array_cxcorr(t, x, events)
 
     fun = events_to_function(events)
     y = fun.(t)
@@ -292,7 +263,7 @@ function estimate_phase_array_cxcorr(t, x, events; use_fft=false)
         if sum(window_idices) == 0
             push!(phase_array, NaN)
         else
-            r = cxcorr(x[window_idices], y[window_idices]; use_fft=use_fft)
+            r = cxcorr(x[window_idices], y[window_idices])
             _, max_index = findmax(r)
             phase = (max_index - 1) / sum(window_idices)
             push!(phase_array, phase)
@@ -408,8 +379,8 @@ Estimate period of a signal based on its autocorrelation function.
 - `show_plots`: Visualize the result. Default is false.
 
 **Returns**
-- `period`: Estimated period (the position of the highest).
-- `peak`: Height of the highest peak.
+- `period`: Estimated period (the position of the first peak).
+- `peak`: Height of the first peak.
 """
 function estimate_period(t, x; n_lags=length(x), show_plots=false)
 
@@ -426,7 +397,7 @@ function estimate_period(t, x; n_lags=length(x), show_plots=false)
     R = autocor(x, 0:(n-1))  # autocorrelation function
 
     # Find peaks of the autocorrelation function
-    pr = findpeaks(R, (0:(n-1)) .* mean(diff(t)), sortstr="descend")
+    pr = findpeaks(R, (0:(n-1)) .* mean(diff(t)))  # , sortstr="descend", sortref="prominence")
 
     # If there are no peaks, return NaNs
     if length(pr) == 0

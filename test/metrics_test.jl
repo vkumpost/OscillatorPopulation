@@ -68,20 +68,11 @@ end
 
     x = [0, 0, 1, 1, 0]
     y = [0, 1, 1, 0, 0]
-    r = cxcorr(x, y; use_fft=false)
-    @test r ≈ [1, 2, 1, 0, 0]
+    r = cxcorr(x, y)
+    @test r ≈ [0.5, 0, 0, 0.5, 1]
 
-    r = cxcorr(y, x; use_fft=false)
-    @test r ≈ [1, 0, 0, 1, 2]
-
-    t = 0:0.01:5
-    x = sin.(2π * t)
-    y = sin.(2π * (t .+ 0.25))
-    r1 = cxcorr(x, y; use_fft=false)
-    r2 = cxcorr(x, y; use_fft=true)
-    @test findmax(r1)[2] ≈ 26
-    @test findmax(r2)[2] ≈ 26
-    @test r1 ≈ r2
+    r = cxcorr(y, x)
+    @test r ≈ [0.5, 1, 0.5, 0, 0]
 
 end
 
