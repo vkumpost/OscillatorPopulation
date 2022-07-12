@@ -37,30 +37,25 @@ end
 
 end
 
-@testset "xcorr" begin
+@testset "window_xcorr" begin
 
     # Cross-correlation
     x = [0, 1, 2, -1]
     y = [0, 1, 1, 0, 0, 5, 8, 12, -2, 3, 0, 0, 1, 2]
-    r = xcorr(x, y)
-    @test r ≈ [3, 1, -5, 2, 9, 34, 5, 4, 3, -1, 0]
+    r = window_xcorr(x, y)
+    @test r ≈ [0.41138392038293375, 0, -1.6455356815317348, -0.925613820861601,
+        -0.7199218606701341, 4.628069104308004, -1.1313057810530678,
+        -0.5142299004786671, 0.5142299004786671, -0.6170758805744005,
+        -0.30853794028720033] ./ 4
 
     x = [0, 1, 2, -1]
     y = [1, 2, 1, 5]
-    r = xcorr(x, y)
-    @test r ≈ [-1]
+    r = window_xcorr(x, y)
+    @test r ≈ [-2.2505813202525626] ./ 4
 
     x = [0, 1, 2, -1]
     y = [1, 2, 1]
-    @test_throws OscillatorPopulationError xcorr(x, y)
-
-    # Autocorrelation
-    x = [0, 1, 1, 0, 0, -5, 8, 12]
-    r = xcorr(x)
-    @test r ≈ [2, 1, 0, -5, 3]
-
-    r = xcorr(x, window_length=0.75)
-    @test r ≈ [27, -39, -60]
+    @test_throws OscillatorPopulationError window_xcorr(x, y)
 
 end
 

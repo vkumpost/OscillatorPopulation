@@ -46,7 +46,7 @@ end
 
 
 """
-`xcorr`
+`window_xcorr`
 
 Compute cross-correlation. This is a particular implementation of the
 cross-correlation function that assumes that `x` is shorter than `y`. `x` is
@@ -60,53 +60,27 @@ moving average, where `x` are the weights and `y` is the averaged signal.
 **Returns**
 - `r`: Cross-correlation of `x` and `y`.
 """
-function xcorr(x, y)
+function window_xcorr(x, y)
 
+    # Remove mean
+    x = zscore(x)
+    y = zscore(y)
+
+    # Length of the input and output vectors
     nx = length(x)
     ny = length(y)
+    nr = ny - nx + 1
 
+    # Check that x is shorter than y
     if nx > ny
         msg = "x must be shorter than y!"
         err = OscillatorPopulationError(msg)
         throw(err)
     end
 
-    nr = ny - nx + 1
+    xx = vcat(x, fill(0, ny-nx))
+    r = crosscov(xx, y, 0:(nr-1); demean=false) .* ny ./ nx
 
-    r = fill(NaN, nr)
-    lags = 0:(nr-1)
-    for lag in lags
-        y_window = y[(lag+1):(lag+nx)]
-        r[lag + 1] = sum(x .* y_window)
-    end
-
-    return r
-
-end
-
-
-"""
-`xcorr`
-
-Compute autocorrelation.
-
-**Arguments**
-- `x`: A signal array.
-
-**Keyword Arguments**
-- `window_length`: Length of the window taken from the beginning of `x` and used
-    as a moving vector to calculate the cross-correlation (see `xcorr(x, y)`).
-    The length is given as fraction of the length of `x`. Default value is 0.5.
-
-**Returns**
-- `r`: Autocorrelation of `x`.
-"""
-function xcorr(x; window_length=0.5)
-
-    nx = length(x)
-    n_window = round(Int64, window_length * nx)
-    x_window = x[1:n_window]
-    r = xcorr(x_window, x)
     return r
 
 end
@@ -136,6 +110,7 @@ function cxcorr(x, y)
     return r
 
 end
+
 
 """
 `estimate_phase_array`

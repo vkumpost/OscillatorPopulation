@@ -24,7 +24,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 **Metrics**
 - `rsquared`: The coefficient of determination.
 - `cmean`: Circular mean.
-- `xcorr`: Cross-correlation.
+- `window_xcorr`: Moving-window cross-correlation.
 - `cxcorr`: Circular cross-correlation.
 - `estimate_phase_array`: Estimate entrainment phase at each cycle.
 - `estimate_phase_array_peaks`: Estimate entrainment phase using peak detection.
@@ -106,7 +106,7 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export rsquared, cmean, xcorr, cxcorr, estimate_phase_array,
+export rsquared, cmean, window_xcorr, cxcorr, estimate_phase_array,
     estimate_phase_array_peaks, estimate_phase_array_cxcorr,
     estimate_order_parameter, estimate_period, estimate_winding_number,
     estimate_period_winding_number, create_simulation_function
