@@ -48,8 +48,8 @@ end
 """
 `window_xcorr`
 
-Compute cross-correlation. This is a particular implementation of the
-cross-correlation function that assumes that `x` is shorter than `y`. `x` is
+Compute moving-window cross-correlation. This is a particular implementation of
+the cross-correlation function that assumes that `x` is shorter than `y`. `x` is
 moved along `y` and the cross-correlation function is calculated as weighted
 moving average, where `x` are the weights and `y` is the averaged signal.
 
