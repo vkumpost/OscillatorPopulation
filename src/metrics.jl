@@ -96,16 +96,17 @@ Compute circular cross-correlation.
 - `y`: Array representing one period of a signal.
 
 **Returns**
-- `r`: Circular cross-correlation of `x` and `y`. Normalized so
-    the maximum of `r` is 1.
+- `r`: Circular cross-correlation of `x` and `y`.
 """
 function cxcorr(x, y)
+
+    x = zscore(x)
+    y = zscore(y)
 
     nx = length(x)
     xx = vcat(x, fill(0, nx))
     yy = vcat(y, y)
-    r = crosscov(xx, yy, 0:(nx-1); demean=false)
-    r ./= maximum(r)
+    r = crosscov(xx, yy, 0:(nx-1); demean=false) .* length(xx) ./ nx
 
     return r
 
