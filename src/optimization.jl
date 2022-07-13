@@ -188,7 +188,10 @@ oscillator.
 - `trajectories`: Number of trajectories in the population. Default value is 1.
 - `parameter_names`: Names of the model parameters to be optimized. By default,
     all model parameters are optimized.
-- `input_parameter_name`: Default `I`.
+- `entrainment_extrema`: Array with two elements indicating the minimum and
+    maximum of the entrained oscillations. By default, entrainment extrema are
+    not considered as an  objective.
+- `input_parameter_name`: Name of the input parameter. Default value is `I`.
 - `show_plots`: If `true`, plot the model simulation vs the data. Default value
     is `false`.
 
@@ -197,8 +200,8 @@ oscillator.
     input argument and returns the squared error of the simulation from the data.
 """
 function create_entrainable_oscillator_objective(model, reference_period;
-    trajectories=1, parameter_names=nothing, input_parameter_name="I",
-    show_plots=false)
+    trajectories=1, parameter_names=nothing, entrainment_extrema=nothing,
+    input_parameter_name="I", show_plots=false)
 
     model = deepcopy(model)
 
@@ -277,7 +280,15 @@ function create_entrainable_oscillator_objective(model, reference_period;
             phase_coherence2, collective_phase2 = estimate_order_parameter(phase_array)
         end
 
-        E2 = abs(collective_phase1 - collective_phase2) / period
+        E2 = abs(collective_phase1 - collective_phase2) / reference_period
+
+        E_total = E1 + E2
+
+        if !isnothing(entrainment_extrema)
+            E3 = abs(entrainment_extrema[1] - minimum(solution.mean[:, 2])) / entrainment_extrema[1]
+            E4 = abs(entrainment_extrema[2] - maximum(solution.mean[:, 2])) / entrainment_extrema[2]
+            E_total = E_total + E3 + E4
+        end
 
         if show_plots
             fig, ax_array = subplots(3)
@@ -289,7 +300,7 @@ function create_entrainable_oscillator_objective(model, reference_period;
             fig.tight_layout()
         end
 
-        return E1 + E2
+        return E_total
 
     end
 
@@ -368,18 +379,25 @@ function create_desynchronization_objective(model, damping_rate, forcing_period;
         p = fit_curve(damped_sine, t, x, p0)
         estimated_damping_rate = p[2]
 
+        xx = damped_sine(t, p)
+        R = rsquared(x, xx)
+
         # Show plot of the simulated trajectory vs the actual data
         if show_plots
 
             _, ax = subplots()
             ax.plot(t, x, color="black", label="Simulation")
-            ax.plot(t, damped_sine(t, p), color="blue", label="Curve fit")
+            ax.plot(t, xx, color="blue", label="Curve fit")
             plot_events(solution.events, ax=ax)
 
         end
 
         # Return the squared error
-        return (estimated_damping_rate - damping_rate) ^2
+        if R > 0.8
+            return (estimated_damping_rate - damping_rate) ^2
+        else
+            return Inf
+        end
 
     end
 
