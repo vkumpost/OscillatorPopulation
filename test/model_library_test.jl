@@ -141,11 +141,11 @@ end
     # ode model
     model = load_model("van-der-pol", "ode")
     @test model.variable_names == ["x", "y"]
-    @test model.parameter_names == ["B", "d", "I"]
+    @test model.parameter_names == ["B", "d", "I", "τ"]
     @test model.problem isa ODEProblem
     @test model.problem.u0 == [0.1, 0.1]
     @test model.problem.tspan == (0.0, 100.0)
-    @test model.problem.p == [10.0, 2.0, 0.0]
+    @test model.problem.p == [10.0, 2.0, 0.0, 7.63]
     @test model.solver_algorithm == DP5()
     @test model.solver_parameters == (saveat=0.01,)
     @test isempty(model.input[1])
@@ -157,11 +157,11 @@ end
     # sde model
     model = load_model("van-der-pol", "sde")
     @test model.variable_names == ["x", "y"]
-    @test model.parameter_names == ["B", "d", "I", "σ"]
+    @test model.parameter_names == ["B", "d", "I", "τ", "σ"]
     @test model.problem isa SDEProblem
     @test model.problem.u0 == [0.1, 0.1]
     @test model.problem.tspan == (0.0, 100.0)
-    @test model.problem.p == [10.0, 2.0, 0.0, 0.1]
+    @test model.problem.p == [10.0, 2.0, 0.0, 7.63, 0.1]
     @test model.solver_algorithm == SOSRI()
     @test model.solver_parameters == (saveat=0.01,)
     @test isempty(model.input[1])

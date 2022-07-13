@@ -324,30 +324,30 @@ function _load_van_der_pol(problem_type)
         x, y = u
         
         # Parameters
-        B, d, I = p
+        B, d, I, τ = p
         
         # Equations
-        du[1] = y
-        du[2] = -(B * x^2 - d) * y - x + I
+        du[1] = τ * ( y )
+        du[2] = τ * ( -(B * x^2 - d) * y - x + I )
 
     end
 
     function noise!(du, u, p, t)
     
         # Parameters
-        σ = p[end]
+        B, d, I, τ, σ = p
     
         # Equations
-        du[1] = σ
-        du[2] = σ
+        du[1] = sqrt(τ) * σ
+        du[2] = sqrt(τ) * σ
 
     end
 
     # Common variables for all model types
     tspan = (0.0, 100.0)
     variable_names = ["x", "y"]
-    parameter_names = ["B", "d", "I"]
-    p = [10.0, 2.0, 0.0]
+    parameter_names = ["B", "d", "I", "τ"]
+    p = [10.0, 2.0, 0.0, 7.63]
     u0 = [0.1, 0.1]
     input = (Matrix{Float64}(undef, 0, 0), "")
     output = sol -> Matrix(sol[:, :]')
@@ -411,9 +411,9 @@ function _load_kim_forger(problem_type)
         A, I, τ = p
         
         # Equations
-        du[1] = τ * max(0, 1 - z/A) - τ * x + I
-        du[2] = τ * x - τ * y
-        du[3] = τ * y - τ * z
+        du[1] = τ * ( max(0, 1 - z/A) - x + I )
+        du[2] = τ * ( x - y )
+        du[3] = τ * ( y - z )
 
     end
 
@@ -431,7 +431,7 @@ function _load_kim_forger(problem_type)
         # Equations
         du[1, 1] = σ * sqrt(τ * max(0, 1 - z/A))
         du[1, 2] = σ * sqrt(τ * x)
-        du[1, 3] = σ * sqrt(I)
+        du[1, 3] = σ * sqrt(τ * I)
         du[2, 4] = σ * sqrt(τ * x)
         du[2, 5] = σ * sqrt(τ * y)
         du[3, 6] = σ * sqrt(τ * y)
@@ -468,7 +468,7 @@ function _load_kim_forger(problem_type)
         affect6!(integrator) = integrator.u[iz] -= 1
         jump6 = ConstantRateJump(rate6, affect6!)
     
-        rate7(u, p, t) = p[iΩ]*p[iI]
+        rate7(u, p, t) = p[iτ]*p[iΩ]*p[iI]
         affect7!(integrator) = (integrator.u[iX] += 1)
         jump7 = ConstantRateJump(rate7, affect7!)
     
