@@ -24,6 +24,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 **Metrics**
 - `rsquared`: The coefficient of determination.
 - `cmean`: Circular mean.
+- `cstd`: Circular standard deviation.
 - `window_xcorr`: Moving-window cross-correlation.
 - `cxcorr`: Circular cross-correlation.
 - `estimate_phase_array`: Estimate entrainment phase at each cycle.
@@ -40,6 +41,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `smooth`: Smooth a vector using a moving average filter.
 
 **Model Library**
+- `kfr`: Kim-Forger function.
 - `load_model`: Load a model from the library.
 
 **Model Functions**
@@ -106,7 +108,7 @@ include("events.jl")
 export OscillatorPopulationError
 include("exceptions.jl")
 
-export rsquared, cmean, window_xcorr, cxcorr, estimate_phase_array,
+export rsquared, cmean, cstd, window_xcorr, cxcorr, estimate_phase_array,
     estimate_phase_array_peaks, estimate_phase_array_cxcorr,
     estimate_order_parameter, estimate_period, estimate_winding_number,
     estimate_period_winding_number, create_simulation_function
@@ -115,7 +117,7 @@ include("metrics.jl")
 export smooth
 include("miscellaneous.jl")
 
-export load_model
+export kfr, load_model
 include("model_library.jl")
 
 export set_initial_conditions!, set_timespan!, set_output!, set_solver!,

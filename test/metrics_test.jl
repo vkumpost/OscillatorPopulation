@@ -37,6 +37,18 @@ end
 
 end
 
+@testset "cstd" begin
+
+    x = [-2.1, -1.1, -0.1, 0.9, 1.9]
+    sd = cstd(x)
+    @test sd ≈ 0
+
+    sd1 = cstd([-0.4, 0.5, 2.6])
+    sd2 = cstd([0.3, 0.5, 0.8])
+    @test sd1 < sd2
+
+end
+
 @testset "window_xcorr" begin
 
     # Cross-correlation

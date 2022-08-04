@@ -36,12 +36,40 @@ Compute circular mean of an array.
 - `m`: Circular mean of `x`.
 """
 function cmean(x)
+    x = mod.(x, 1)
     x_rad = x * 2π
     S = mean(sin.(x_rad))
     C = mean(cos.(x_rad))
     m_rad = atan(S, C) 
     m = m_rad / 2π
     return m
+end
+
+
+"""
+`cstd(x)`
+
+Compute circular standard deviation of an array.
+
+**Arguments**
+- `x`: Array of angles normalized to the interval [0, 1].
+
+**Returns**
+- `sd`: Circular standard deviation of `x`.
+"""
+function cstd(x)
+    x = mod.(x, 1)
+    x_rad = x * 2π
+    S = mean(sin.(x_rad))
+    C = mean(cos.(x_rad))
+    R = sqrt(S^2 + C^2)
+    x = -2*log(R)
+    if x < 0  # for numerical errors close to 0
+        x = 0
+    end
+    sd_rad = sqrt(x)
+    sd = sd_rad / 2π
+    return sd
 end
 
 
@@ -465,7 +493,8 @@ function _estimate_entrainment_properties()
             "winding_number", "autocorrelation",
             "phase_coherence", "mean_phase",
             "phase_coherence_cxcorr", "mean_phase_cxcorr",
-            "phase_coherence_population", "collective_phase"]
+            "phase_coherence_population", "collective_phase",
+            "phase_coherence_population_cxcorr", "collective_phase_cxcorr"]
     return property_names
 end
 
@@ -499,6 +528,8 @@ function _estimate_entrainment_properties(solution; smooth_span=1, variable_x=1,
     mean_phase_cxcorr = nothing
     phase_coherence_population = nothing
     collective_phase = nothing
+    phase_coherence_population_cxcorr = nothing
+    collective_phase_cxcorr = nothing
 
     # Iterate property names
     for (i_property, property_name) in enumerate(property_names)
@@ -568,6 +599,20 @@ function _estimate_entrainment_properties(solution; smooth_span=1, variable_x=1,
                 phase_coherence_population, collective_phase = estimate_order_parameter(phase_array)
             end
             property_values[i_property] = collective_phase
+
+        elseif property_name == "phase_coherence_population_cxcorr"
+            if isnothing(phase_coherence_population_cxcorr)
+                phase_array = estimate_phase_array(t, U, events; method="cxcorr", smooth_span=smooth_span)
+                phase_coherence_population_cxcorr, collective_phase_cxcorr = estimate_order_parameter(phase_array)
+            end
+            property_values[i_property] = phase_coherence_population_cxcorr
+
+        elseif property_name == "collective_phase_cxcorr"    
+            if isnothing(collective_phase_cxcorr)
+                phase_array = estimate_phase_array(t, U, events; method="cxcorr", smooth_span=smooth_span)
+                phase_coherence_population_cxcorr, collective_phase_cxcorr = estimate_order_parameter(phase_array)
+            end
+            property_values[i_property] = collective_phase_cxcorr
 
         else
             msg = "Property `$(property_name)` is not valid!"
@@ -645,7 +690,11 @@ function create_simulation_function(property_names=nothing; transient=0.9,
         end
 
         # Simulate the population
-        max_time = model.problem.tspan[end]
+        if model.problem isa JumpProblem
+            max_time = model.problem.prob.tspan[2]
+        else
+            max_time = model.problem.tspan[2]
+        end
         time_step = diff(model.input[1][2:3, 1])[1] / cycle_samples
         min_time = transient * max_time
         _, idx = findmin(abs.(min_time .- model.input[1][:, 1]))
