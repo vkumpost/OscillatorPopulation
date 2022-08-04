@@ -230,13 +230,12 @@ function create_entrainable_oscillator_objective(model, reference_period;
         solution = select_time(solution, min_time=min_time)
         t_dd = solution.time
         x_dd = solution.mean[:, 1]
-        y_dd = solution.mean[:, 2]
         amp_dd = (maximum(x_dd) - minimum(x_dd))
         if amp_dd < 0.1
             return Inf
         end
 
-        period = estimate_period_winding_number(x_dd, y_dd, min_time)
+        period, _ = estimate_period(t_dd, x_dd)
         E1 = abs(period - reference_period) / reference_period
 
         # Entrainment
