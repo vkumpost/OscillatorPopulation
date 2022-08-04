@@ -30,7 +30,7 @@ end
 Compute circular mean of an array.
 
 **Arguments**
-- `x`: Array of angles normalized to the interval [0, 1].
+- `x`: Array of angles in the interval [0, 1].
 
 **Returns**
 - `m`: Circular mean of `x`.
@@ -42,6 +42,7 @@ function cmean(x)
     C = mean(cos.(x_rad))
     m_rad = atan(S, C) 
     m = m_rad / 2π
+    m = mod(m, 1)
     return m
 end
 
