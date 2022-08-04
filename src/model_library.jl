@@ -1,3 +1,7 @@
+
+kfr(R, A, K) = (A - R - K + sqrt((A - R - K)^2 + 4*A*K)) / (2*A)
+kfr(R, A) = max(0, 1 - R/A)
+
 """
 `load_model`
 
@@ -469,7 +473,7 @@ function _load_kim_forger(problem_type)
         jump6 = ConstantRateJump(rate6, affect6!)
     
         rate7(u, p, t) = p[iτ]*p[iΩ]*p[iI]
-        affect7!(integrator) = (integrator.u[iX] += 1)
+        affect7!(integrator) = (integrator.u[ix] += 1)
         jump7 = ConstantRateJump(rate7, affect7!)
     
         return jump1, jump2, jump3, jump4, jump5, jump6, jump7
