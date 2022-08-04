@@ -251,7 +251,11 @@ function scan_arnold(model, simulation_function; input_amplitudes=[1.0],
         input_duty_cycle = input_value_combinations[i, 3]
 
         # Generate input
-        end_time = model.problem.tspan[2]
+        if model.problem isa JumpProblem
+            end_time = model.problem.prob.tspan[2]
+        else
+            end_time = model.problem.tspan[2]
+        end
         events = create_events_cycle(end_time, input_period, input_duty_cycle)
         set_input!(model2, events, input_parameter)
         set_parameter!(model2, input_parameter, input_amplitude)
