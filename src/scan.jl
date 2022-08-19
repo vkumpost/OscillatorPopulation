@@ -534,6 +534,7 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
     idx = t .> trajectory_start
     trajectory_time = t[idx]
     trajectory_reference = x[idx]
+    n_trajectory_reference = length(trajectory_reference)
     if show_plots
         axs[2].plot([events_end, events_end], [minimum(x), maximum(x)], "--", color="blue")
         axs[2].plot(locs, pks, "x", color="blue")
@@ -571,8 +572,8 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
         x = solution.mean[:, 1]
 
         # Extract the last part to be compared with the reference
-        idx = t .> trajectory_start_original
-        trajectory = x[idx]
+        nx = length(x)
+        trajectory = x[nx-n_trajectory_reference+1:nx]
 
         # Plot the simulation for the visual verification
         if show_plots
