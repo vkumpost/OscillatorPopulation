@@ -663,12 +663,12 @@ function _load_hasty(problem_type)
         x, y = u
 
         # Parameters
-        α, β, ay, dx, dy, I = p
+        α, β, γx, γy, τy, I = p
 
         # Equations
         F = (1 + x^2 + α*β*x^4) / ((1 + x^2 + β*x^4)*(1 + y^4))
-        du[1] = dx = F -  dx*x + I
-        du[2] = dy = ay * F - dy*y
+        du[1] = dx = F -  γx*x + I
+        du[2] = dy = (F - γy*y) / τy
 
     end
 
@@ -689,8 +689,8 @@ function _load_hasty(problem_type)
     # Common variables for all model types
     tspan = (0.0, 300.0)
     variable_names = ["x", "y"]
-    parameter_names = ["α", "β", "ay", "dx", "dy", "I"]
-    p = [11.0, 2.0, 0.2, 0.2, 0.012, 0.0]
+    parameter_names = ["α", "β", "γx", "γy", "τy", "I"]
+    p = [11.0, 2.0, 0.105, 0.036, 5.0, 0.0]
     u0 = [0.1, 0.1]
     input = (Matrix{Float64}(undef, 0, 0), "")
     output = sol -> Matrix(sol[:, :]')
