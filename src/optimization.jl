@@ -227,6 +227,9 @@ function create_entrainable_oscillator_objective(model, reference_period;
         catch e
             return Inf
         end
+        if !solution.success
+            return Inf
+        end
         solution = select_time(solution, min_time=min_time)
         t_dd = solution.time
         x_dd = solution.mean[:, 1]
@@ -249,6 +252,9 @@ function create_entrainable_oscillator_objective(model, reference_period;
         catch e
             return Inf
         end
+        if !solution.success
+            return Inf
+        end
         solution = select_time(solution, min_time=min_time)
         t_ld = solution.time
         x_ld = solution.mean[:, 1]
@@ -266,6 +272,9 @@ function create_entrainable_oscillator_objective(model, reference_period;
         try
             solution = simulate_population(model2, trajectories)
         catch e
+            return Inf
+        end
+        if !solution.success
             return Inf
         end
         solution = select_time(solution, min_time=min_time)
