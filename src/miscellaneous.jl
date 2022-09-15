@@ -38,3 +38,32 @@ function smooth(y; span=5)
     return yy
 
 end
+
+
+"""
+`generate_random_values`
+
+Generate a vector of random numbers drawn from the truncated normal distribution.
+
+**Arguments**
+- `μ`: Mean.
+- `σ`: Standard deviation.
+- `n`: Number of values.
+
+**Keyword Arguments**
+- `lower`: Minimum value (default: `nothing`).
+- `upper`: Maximum value (default: `nothing`).
+- `seed`: Random number generator seed (default: `nothing`).
+
+**Returns**
+- `values`: An array of generated values.
+"""
+function generate_random_values(μ, σ, n; lower=nothing, upper=nothing, seed=nothing)
+
+    random_number_generator = MersenneTwister(seed)
+    distribution = truncated(Normal(μ, σ), lower, upper)
+    values = rand(random_number_generator, distribution, n)
+
+    return values
+    
+end

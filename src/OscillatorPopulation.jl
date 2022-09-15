@@ -39,6 +39,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 
 **Miscellaneous**
 - `smooth`: Smooth a vector using a moving average filter.
+- `generate_random_values`: Generate a vector of random numbers.
 
 **Model Library**
 - `kfr`: Kim-Forger function.
@@ -83,6 +84,7 @@ module OscillatorPopulation
 using DataFrames
 using DelimitedFiles
 using DifferentialEquations
+using Distributions
 using FFTW
 using PyPlot
 using Random
@@ -114,7 +116,7 @@ export rsquared, cmean, cstd, window_xcorr, cxcorr, estimate_phase_array,
     estimate_period_winding_number, create_simulation_function
 include("metrics.jl")
 
-export smooth
+export smooth, generate_random_values
 include("miscellaneous.jl")
 
 export kfr, load_model
