@@ -422,7 +422,7 @@ end
 """
 `estimate_prc`
 
-Estimate arnold tongue and/or onion.
+Estimate the phase response curve.
 
 **Arguments**
 - `model`: Model.
