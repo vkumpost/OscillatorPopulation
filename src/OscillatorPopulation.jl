@@ -40,6 +40,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 **Miscellaneous**
 - `smooth`: Smooth a vector using a moving average filter.
 - `generate_random_values`: Generate a vector of random numbers.
+- `benchmark`: Estimate evaluation time for a function.
 
 **Model Library**
 - `kfr`: Kim-Forger function.
@@ -116,7 +117,7 @@ export rsquared, cmean, cstd, window_xcorr, cxcorr, estimate_phase_array,
     estimate_period_winding_number, create_simulation_function
 include("metrics.jl")
 
-export smooth, generate_random_values
+export smooth, generate_random_values, benchmark
 include("miscellaneous.jl")
 
 export kfr, load_model

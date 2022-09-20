@@ -39,3 +39,9 @@ end
     @test all(8 .< values .< 12)
 
 end
+
+@testset "benchmark" begin
+
+    @test hasmethod(benchmark, Tuple{Function}, (:n_repeats,))
+
+end

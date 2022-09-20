@@ -67,3 +67,36 @@ function generate_random_values(μ, σ, n; lower=nothing, upper=nothing, seed=no
     return values
     
 end
+
+
+"""
+`benchmark`
+
+Estimate evaluation time for a function.
+
+**Arguments**
+- `fun`: Function.
+
+**Keyword Arguments**
+- `n_repeats`: Number of repeats (default: 100).
+
+**Returns**
+- `mean_time`: Mean evaluation time in milliseconds.
+- `std_time`: Standard deviation in milliseconds.
+"""
+function benchmark(fun; n_repeats=100)
+    
+    # Dummy run to make sure the function is compiled
+    _ = @elapsed x = fun()
+
+    time_array = fill(NaN, n_repeats)
+    for i = 1:n_repeats
+        time_array[i] = @elapsed x = fun()
+    end
+
+    mean_time = mean(time_array .* 1000)
+    std_time = std(time_array .* 1000)
+
+    return mean_time, std_time
+
+end
