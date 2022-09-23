@@ -9,6 +9,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `biolum_mean`: Calculate mean of the bioluminescence traces.
 - `save_data`: Save a dataframe as a csv file.
 - `load_data`: Load a dataframe from a csv file.
+- `save_figure`: Save figure as a file.
 
 **Events**
 - `create_events`: Create events represented by a matrix.
@@ -101,7 +102,7 @@ include("FindPeaks/FindPeaks.jl")
 using .FindPeaks
 
 export load_biolum, detect_events, biolum_zscore_traces, biolum_mean, save_data,
-    load_data
+    load_data, save_figure
 include("data.jl")
 
 export create_events, create_events_cycle, events_to_function, plot_events,

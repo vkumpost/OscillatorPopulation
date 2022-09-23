@@ -202,3 +202,36 @@ function load_data(filename)
     return df
 
 end
+
+
+"""
+`save_figure`
+
+Save figure into a file.
+
+**Arguments**
+- `fig`: PyPlot figure.
+- `filename`: Path to file.
+
+**Keyword Arguments**
+- `force`: If `true`, `filename` will be overwritten, if already exists.
+"""
+function save_figure(fig, filename; force=false)
+
+    # Check if the file already exists
+    if !force && isfile(filename)
+        msg = "File $(filename) already exists!"
+        err = OscillatorPopulationError(msg)
+        throw(err)
+    end
+
+    # Create necessary directories
+    dir, _ = splitdir(filename)
+    if !isdir(dir)
+        mkpath(dir)
+    end
+
+    # Write the dataframe into the csv file
+    fig.savefig(filename)
+
+end
