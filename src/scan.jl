@@ -440,6 +440,7 @@ Estimate the phase response curve.
     the phase shift.
 - `input_parameter`: Name of the parameter on which is the input signal acting.
 - `pulse_length`: Length of the input pulse.
+- `show_progress`: If `true`, show a progress bar in the terminal.
 - `show_plots`: If `true`, show plots visualizing the PRC estimation.
 
 **Returns**
@@ -451,7 +452,7 @@ Estimate the phase response curve.
 """
 function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=10,
     pacing_length=10, offset=3, response_length=3, input_parameter="I",
-    pulse_length=nothing, show_plots=false)
+    pulse_length=nothing, show_progress=false, show_plots=false)
 
     # Copy model so the original is not modified
     model_prc = deepcopy(model)
@@ -557,6 +558,11 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
         fig_corr, ax_arr_corr = subplots(length(pulse_times), 1)
     end
 
+    # Initialize progress bar
+    if show_progress
+        progressmeter = ProgressMeter.Progress(length(pulse_times); barlen=20)
+    end
+
     # Estimated the phase shifts for the different pulse times along the cycle
     phase_shifts = fill(NaN, length(pulse_times))
     for (i, pulse_time) in enumerate(pulse_times)
@@ -605,6 +611,11 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
         if show_plots
             ax_arr_corr[i].plot(R_time, R, color="black")
             ax_arr_corr[i].plot(loc, pk, "o", color="red")
+        end
+
+        # Update progress bar
+        if show_progress
+            ProgressMeter.next!(progressmeter)
         end
 
     end
