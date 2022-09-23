@@ -687,7 +687,7 @@ function estimate_T_prc(model, T_cycles; trajectories=1, input_parameter="I",
         solution = simulate_population(model, trajectories)
         solution = select_time(solution, min_time=end_time/2)
         t = solution.time
-        x = solution.mean[:, 3]
+        x = solution.mean[:, 1]
         events = solution.events
 
         # Estimate the phase of entrainment
