@@ -635,3 +635,76 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
     return PRC
 
 end
+
+
+"""
+`estimate_T_prc`
+
+Estimate T-cycle phase response curve.
+
+**Arguments**
+- `model`: Model.
+- `T_cycles`: Array of periods for which the phase response will be estimated.
+
+**Keyword Arguments**
+- `trajectories`: Number of trajectories in the population.
+- `input_parameter`: Name of the parameter on which is the input signal acting.
+- `show_progress`: If `true`, show a progress bar in the terminal.
+
+**Returns**
+- `df`: Dataframe representing the estimated T-cycle PRC. The first column
+    correspond to T_cycles, second to the estimated phases, and third to phase
+    coherence for the individual estimations.
+"""
+function estimate_T_prc(model, T_cycles; trajectories=1, input_parameter="I",
+    show_progress=false)
+
+    # Prepare arrays to save the results
+    n_T_cycles = length(T_cycles)
+    phase_coherence_array = fill(NaN, n_T_cycles)
+    collective_phase_array = fill(NaN, n_T_cycles)
+
+    # Initialize progress bar
+    if show_progress
+        progressmeter = ProgressMeter.Progress(n_T_cycles; barlen=20)
+    end
+
+    # Iterate T cycles
+    for i_T_cycle = 1:n_T_cycles
+
+        T_cycle = T_cycles[i_T_cycle]
+        
+        # Create forcing events
+        if model.problem isa JumpProblem
+            end_time = model.problem.prob.tspan[2]
+        else
+            end_time = model.problem.tspan[2]
+        end
+        events = create_events_cycle(end_time, T_cycle)
+        set_input!(model, events, input_parameter)
+
+        # Perform simulation
+        solution = simulate_population(model, trajectories)
+        solution = select_time(solution, min_time=end_time/2)
+        t = solution.time
+        x = solution.mean[:, 3]
+        events = solution.events
+
+        # Estimate the phase of entrainment
+        phase_array = estimate_phase_array(t, x, events)
+        phase_coherence, collective_phase = estimate_order_parameter(phase_array)
+        phase_coherence_array[i_T_cycle] = phase_coherence
+        collective_phase_array[i_T_cycle] = collective_phase
+
+        # Update progress bar
+        if show_progress
+            ProgressMeter.next!(progressmeter)
+        end
+
+    end
+
+    # Output the results as a dataframe
+    df = DataFrame(T_cycle=T_cycles, phase=collective_phase_array, phase_coherence=phase_coherence_array)
+    return df
+
+end

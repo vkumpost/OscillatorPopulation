@@ -116,3 +116,9 @@ end
     @test estimate_prc isa Function
 
 end
+
+@testset "estimate_T_prc" begin
+
+    @test estimate_T_prc isa Function
+
+end
