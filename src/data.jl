@@ -29,9 +29,9 @@ Load data from a bioluminescence experiment.
 """
 function load_biolum(plate; first_event=0, last_event=Inf,
     first_event_end=false, last_event_end=false, max_time=Inf)
-    # rename max_time to duration
-
-    table, header = XLSX.readtable(BIOLUM_LOCAL_PATH, plate)
+    
+    data_table = XLSX.readtable(BIOLUM_LOCAL_PATH, plate)
+    table, header = data_table.data, data_table.column_labels
     float_array = convert(Array{Array{Float64, 1}, 1}, table)
     df = DataFrame(float_array, header)
 
