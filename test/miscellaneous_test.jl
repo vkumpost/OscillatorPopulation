@@ -45,3 +45,16 @@ end
     @test hasmethod(benchmark, Tuple{Function}, (:n_repeats,))
 
 end
+
+@testset "find_closest" begin
+
+    array = [0.1, -8.6, 2.2, 1.97, 0.15, -1.93, -0.1]
+    value = 1.94
+    index = find_closest(value, array)
+    @test index == 4
+
+    value = -2.2
+    index = find_closest(value, array)
+    @test index == 6
+
+end

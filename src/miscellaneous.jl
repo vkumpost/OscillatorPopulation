@@ -100,3 +100,24 @@ function benchmark(fun; n_repeats=100)
     return mean_time, std_time
 
 end
+
+
+"""
+`find_closest`
+
+Find the index of the closest value in an array.
+
+**Arguments**
+- `array`: Array of values.
+- `value`: Target value.
+
+**Returns**
+- `index`: Index of the value in `array` that is the closest to `value`.
+"""
+function find_closest(array, value)
+
+    difference = abs.(array .- value)
+    index = argmin(difference)
+    return index
+    
+end
