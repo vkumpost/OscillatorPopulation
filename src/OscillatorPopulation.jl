@@ -80,6 +80,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `scan`: Scan parameter values.
 - `scan_arnold`: Scan input-signal parameters (amplitude, period, duty cycle).
 - `plot_arnold`: Plot the output of `scan_arnold`.
+- `select_arnold_row`: Select a row from the output of `scan_arnold`.
 - `estimate_prc`: Estimate a phase response curve.
 - `estimate_T_prc`: Estimate T-cycle phase response curve.
 """
@@ -140,7 +141,7 @@ include("optimization.jl")
 export simulate_population, plot_solution, select_time, select_subset
 include("population.jl")
 
-export scan, scan_arnold, plot_arnold, estimate_prc, estimate_T_prc
+export scan, scan_arnold, plot_arnold, select_arnold_row, estimate_prc, estimate_T_prc
 include("scan.jl")
 
 end  # module

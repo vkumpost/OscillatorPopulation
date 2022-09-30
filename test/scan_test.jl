@@ -111,6 +111,30 @@ end
 
 end
 
+@testset "select_arnold_row" begin
+    
+    df = DataFrame(
+        "input_amplitude" => [1, 3, 3, 4],
+        "input_period" => [8, 7, 8, 7],
+        "input_duty_cycle" => [9, 9, 9, 9],
+        "some_value" => [7, 8, 9, 2]
+    )
+
+    amplitude = 3.1
+    period = 6.9
+    duty_cycle = 9
+    df_row = select_arnold_row(df, amplitude, period, duty_cycle)
+
+    @test df_row isa DataFrame
+    @test size(df_row) == (1, 4)
+    @test names(df_row) == ["input_amplitude", "input_period", "input_duty_cycle", "some_value"]
+    @test df_row[1, 1] == 3
+    @test df_row[1, 2] == 7
+    @test df_row[1, 3] == 9
+    @test df_row[1, 4] == 8
+
+end
+
 @testset "estimate_prc" begin
 
     @test estimate_prc isa Function

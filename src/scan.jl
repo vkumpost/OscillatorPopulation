@@ -420,6 +420,34 @@ end
 
 
 """
+`select_arnold_row`
+
+Find a specific row in the Arnold tongue DataFrame.
+
+**Arguments**
+- `df`: `DataFrame` representing Arnold tongue.
+- `amplitude`: Input amplitude of the Arnold tongue.
+- `period`: Input period of the Arnold tongue.
+- `duty_cycle`: Input duty cycle of the Arnold tongue.
+
+**Returns**
+- `selected_row`: Row from `df` that is the closest to the requested arguments.
+"""
+function select_arnold_row(df::DataFrame, amplitude, period, duty_cycle)
+
+    df_copy = deepcopy(df)
+    df_copy[!, 1:3] = Float64.(df_copy[!, 1:3])
+    df_copy[!, "input_amplitude"] = abs.(df_copy[!, "input_amplitude"] .- amplitude)
+    df_copy[!, "input_period"] = abs.(df_copy[!, "input_period"] .- period)
+    df_copy[!, "input_duty_cycle"] = abs.(df_copy[!, "input_duty_cycle"] .- duty_cycle)
+    indices = sortperm(df_copy, ["input_amplitude", "input_period", "input_duty_cycle"])
+    selected_row = DataFrame(df[indices, :][1, :])
+    return selected_row
+
+end
+
+
+"""
 `estimate_prc`
 
 Estimate the phase response curve.
