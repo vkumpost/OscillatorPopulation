@@ -239,7 +239,12 @@ function create_entrainable_oscillator_objective(model, reference_period;
         end
 
         period, _ = estimate_period(t_dd, x_dd)
-        E1 = abs(period - reference_period) / reference_period
+        E1 = abs(period - reference_period)
+        if E1 < reference_period * 0.1
+            E1 = 0.0
+        else
+            E1 /= reference_period
+        end
 
         # Entrainment
         set_parameter!(model2, parameter_names, parameter_values)
@@ -293,8 +298,18 @@ function create_entrainable_oscillator_objective(model, reference_period;
         E_total = E1 + E2
 
         if !isnothing(entrainment_extrema)
-            E3 = abs(entrainment_extrema[1] - minimum(solution.mean[:, 2])) / entrainment_extrema[1]
-            E4 = abs(entrainment_extrema[2] - maximum(solution.mean[:, 2])) / entrainment_extrema[2]
+            E3 = abs(entrainment_extrema[1] - minimum(solution.mean[:, 1]))
+            if E3 < entrainment_extrema[1] * 0.1
+                E3 = 0.0
+            else
+                E3 /=  entrainment_extrema[1]
+            end
+            E4 = abs(entrainment_extrema[2] - maximum(solution.mean[:, 1]))
+            if E4 < entrainment_extrema[2] * 0.1
+                E4 = 0.0
+            else
+                E4 /= entrainment_extrema[2]
+            end
             E_total = E_total + E3 + E4
         end
 
