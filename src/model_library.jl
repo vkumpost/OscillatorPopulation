@@ -687,7 +687,7 @@ function _load_hasty(problem_type)
     end
 
     # Common variables for all model types
-    tspan = (0.0, 300.0)
+    tspan = (0.0, 1000.0)
     variable_names = ["x", "y"]
     parameter_names = ["α", "β", "γx", "γy", "τy", "I"]
     p = [11.0, 2.0, 0.105, 0.036, 5.0, 0.0]
