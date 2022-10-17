@@ -447,13 +447,16 @@ Optimize a cost function.
     are individuals and columns are parameter values. This option overwrites 
     `population_size`, if both are passed.
 - `trace_mode`: `:compact` (defualt), `:silent` or `:verbose`.
+- `progress_filename`: Name of a csv file to save the optimization progress
+    (fitness as a function of the number of steps).
 
 **Returns**
 - `best_candidate`: A vector representing the best candidate solution.
 - `final_population`: The final population of candidates.
 """
 function optimize(cost_function; search_range=nothing, max_steps=nothing,
-    population_size=nothing, initial_population=nothing, trace_mode=nothing)
+    population_size=nothing, initial_population=nothing, trace_mode=nothing,
+    progress_filename=nothing)
 
     optimizer_kwargs = Dict{Symbol, Any}(
         :TraceMode => :compact,
@@ -479,6 +482,38 @@ function optimize(cost_function; search_range=nothing, max_steps=nothing,
 
     if !isnothing(trace_mode)
         optimizer_kwargs[:TraceMode] = trace_mode
+    end
+
+    if !isnothing(progress_filename)
+
+        function create_callback_function()
+
+            best_fitness = Inf
+            counter = 0
+            df = DataFrame(:Step=>Float64[], :Fitness=>Float64[])
+
+            function callback_function(oc)
+
+                counter += 1
+                current_fitness = BlackBoxOptim.best_fitness(oc)
+
+                if current_fitness < best_fitness
+                    
+                    best_fitness = current_fitness
+                    push!(df, [counter, best_fitness])
+                    save_data(df, progress_filename; force=true)
+                    
+                end
+
+            end
+    
+            return callback_function
+    
+        end
+
+        optimizer_kwargs[:CallbackFunction] = create_callback_function()
+        optimizer_kwargs[:CallbackInterval] = 0.0
+
     end
 
     res = BlackBoxOptim.bboptimize(cost_function; optimizer_kwargs...)
