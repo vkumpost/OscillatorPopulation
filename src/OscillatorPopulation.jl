@@ -43,6 +43,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `generate_random_values`: Generate a vector of random numbers.
 - `benchmark`: Estimate evaluation time for a function.
 - `find_closest`: Find the index of the closest value in an array.
+- `binary_search`: Binary search.
 
 **Model Library**
 - `kfr`: Kim-Forger function.
@@ -121,7 +122,7 @@ export rsquared, cmean, cstd, window_xcorr, cxcorr, estimate_phase_array,
     estimate_period_winding_number, create_simulation_function
 include("metrics.jl")
 
-export smooth, generate_random_values, benchmark, find_closest
+export smooth, generate_random_values, benchmark, find_closest, binary_search
 include("miscellaneous.jl")
 
 export kfr, load_model
