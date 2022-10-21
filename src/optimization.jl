@@ -335,13 +335,10 @@ end
 """
 `create_desynchronization_objective`
 
-Create a cost function for fitting noise intensity to the population-level 
-damping rate.
+Create a function that estimates the damping rate.
 
 **Arguments**
 - `model`: `Model`.
-- `damping_rate`: Damping rate of the damped sine fitted to the population-level
-    data.
 - `forcing_period`: Period of the forcing signal to entrain the population.
 
 **Keyword Arguments**
@@ -353,10 +350,9 @@ damping rate.
 
 **Returns**
 - `cost_function`: A cost function that takes an array of parameter values as an
-    input argument and returns the squared error of the simulated damping rate
-    from the reference damping rate.
+    input argument and returns the estimated damping rate.
 """
-function create_desynchronization_objective(model, damping_rate, forcing_period;
+function create_desynchronization_objective(model, forcing_period;
     trajectories=1, noise_parameter_name="σ", input_parameter_name="I",
     show_plots=false
     )
@@ -374,11 +370,11 @@ function create_desynchronization_objective(model, damping_rate, forcing_period;
     set_solver!(model, saveat=range(min_time, max_time, 100))
 
     # Cost function
-    function cost_function(parameter_values; show_plots=show_plots)
+    function cost_function(noise_intensity; show_plots=show_plots)
         
         # Set parameters of the model
         model2 = deepcopy(model)
-        set_parameter!(model2, noise_parameter_name, parameter_values[1])
+        set_parameter!(model2, noise_parameter_name, noise_intensity[1])
 
         # Simulate the model
         solution = nothing
@@ -417,10 +413,58 @@ function create_desynchronization_objective(model, damping_rate, forcing_period;
 
         # Return the squared error
         if R > 0.8
-            return (estimated_damping_rate - damping_rate) ^2
+            return estimated_damping_rate
         else
             return Inf
         end
+
+    end
+
+    return cost_function
+
+end
+
+
+"""
+`create_desynchronization_objective`
+
+Create a cost function for fitting noise intensity to the population-level 
+damping rate.
+
+**Arguments**
+- `model`: `Model`.
+- `damping_rate`: Damping rate of the damped sine fitted to the population-level
+    data.
+- `forcing_period`: Period of the forcing signal to entrain the population.
+
+**Keyword Arguments**
+- `trajectories`: Number of trajectories in the population. Default value is 1.
+- `noise_parameter_name`: Name of the noise parameter. Default value is `σ`.
+- `input_parameter_name`: Name of the input parameter. Default values is `I`.
+- `show_plots`: If `true`, plot the model simulation vs the data. Default value
+    is `false`.
+
+**Returns**
+- `cost_function`: A cost function that takes an array of parameter values as an
+    input argument and returns the squared error of the simulated damping rate
+    from the reference damping rate.
+"""
+function create_desynchronization_objective(model, damping_rate, forcing_period;
+    trajectories=1, noise_parameter_name="σ", input_parameter_name="I",
+    show_plots=false
+    )
+
+    cost_function_tmp = create_desynchronization_objective(model, forcing_period;
+        trajectories=trajectories, noise_parameter_name=noise_parameter_name,
+        input_parameter_name=input_parameter_name, show_plots=show_plots
+    )
+    
+    # Cost function
+    function cost_function(parameter_values; show_plots=show_plots)
+        
+        estimated_damping_rate = cost_function_tmp(parameter_values)
+
+            return (estimated_damping_rate - damping_rate) ^2
 
     end
 
