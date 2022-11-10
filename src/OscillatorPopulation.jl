@@ -71,7 +71,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `fit_curve`: Fit curve to data.
 - `binary_search`: Binary search.
 
-**Population Simulation**
+**Population Solution**
 - `simulate_population`: Simulate an uncoupled population.
 - `plot_solution`: Plot results of a simulation.
 - `select_time`: Select specific time of a simulation result.
@@ -139,7 +139,7 @@ export estimate_initial_conditions, create_data_objective,
 include("optimization.jl")
 
 export simulate_population, plot_solution, select_time, select_subset
-include("population.jl")
+include("population_solution.jl")
 
 export scan, scan_arnold, plot_arnold, select_arnold_row, estimate_prc, estimate_T_prc
 include("scan.jl")

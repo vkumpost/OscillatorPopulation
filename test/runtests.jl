@@ -41,7 +41,7 @@ end
 end
 
 @testset "population" begin
-    include("population_test.jl")
+    include("population_solution_test.jl")
 end
 
 @testset "scan" begin
