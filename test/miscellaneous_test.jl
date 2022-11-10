@@ -58,17 +58,3 @@ end
     @test index == 6
 
 end
-
-@testset "binary_search" begin
-    
-    fun = x -> x ^ 2
-    target_value = 144
-    search_range = [0, 100]
-    x = binary_search(fun, target_value, search_range; tolerance=0)
-    @test x ≈ 12
-
-    # Target value outside of the search range
-    target_value = 61504
-    @test_throws OscillatorPopulationError binary_search(fun, target_value, search_range)
-
-end

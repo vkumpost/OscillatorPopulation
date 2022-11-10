@@ -43,7 +43,6 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `generate_random_values`: Generate a vector of random numbers.
 - `benchmark`: Estimate evaluation time for a function.
 - `find_closest`: Find the index of the closest value in an array.
-- `binary_search`: Binary search.
 
 **Model Library**
 - `kfr`: Kim-Forger function.
@@ -70,6 +69,7 @@ Package for a simulation of populations of uncpupled oscillators under periodic
 - `damped_sine`: A damped sine function.
 - `polynomial`: Polynomial function.
 - `fit_curve`: Fit curve to data.
+- `binary_search`: Binary search.
 
 **Population Simulation**
 - `simulate_population`: Simulate an uncoupled population.
@@ -122,7 +122,7 @@ export rsquared, cmean, cstd, window_xcorr, cxcorr, estimate_phase_array,
     estimate_period_winding_number, create_simulation_function
 include("metrics.jl")
 
-export smooth, generate_random_values, benchmark, find_closest, binary_search
+export smooth, generate_random_values, benchmark, find_closest
 include("miscellaneous.jl")
 
 export kfr, load_model
@@ -135,8 +135,7 @@ include("model.jl")
 
 export estimate_initial_conditions, create_data_objective,
     create_entrainable_oscillator_objective, create_desynchronization_objective,
-    optimize, damped_sine, polynomial,
-    fit_curve
+    optimize, damped_sine, polynomial, fit_curve, binary_search
 include("optimization.jl")
 
 export simulate_population, plot_solution, select_time, select_subset
