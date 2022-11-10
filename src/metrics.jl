@@ -409,7 +409,7 @@ function estimate_period(t, x; n_lags=length(x), show_plots=false)
         return (NaN, NaN)
     end
 
-    # Get the highest peaks (peak height and location = period)
+    # Get the first peak and its location as the estimated period
     peak = peakheights(pr)[1]
     period = peaklocations(pr)[1]
 
