@@ -2,14 +2,16 @@
 Package for a simulation of populations of uncpupled oscillators under periodic
     pacing.
 
-**Data Processing**
+**Input and Output**
+- `save_data`: Save a dataframe as a csv file.
+- `load_data`: Load a dataframe from a csv file.
+- `save_figure`: Save figure as a file.
+
+**Luminescence Data**
 - `load_biolum`: Load bioluminescence data.
 - `detect_events`: Detect events in the bioluminescence data.
 - `biolum_zscore_traces`: Apply Z-score to bioluminescence traces.
 - `biolum_mean`: Calculate mean of the bioluminescence traces.
-- `save_data`: Save a dataframe as a csv file.
-- `load_data`: Load a dataframe from a csv file.
-- `save_figure`: Save figure as a file.
 
 **Events**
 - `create_events`: Create events represented by a matrix.
@@ -105,9 +107,8 @@ import XLSX
 include("FindPeaks/FindPeaks.jl")
 using .FindPeaks
 
-export load_biolum, detect_events, biolum_zscore_traces, biolum_mean, save_data,
-    load_data, save_figure
-include("data.jl")
+export load_biolum, detect_events, biolum_zscore_traces, biolum_mean
+include("biolum_data.jl")
 
 export create_events, create_events_cycle, events_to_function, plot_events,
     create_callback, detect_events
@@ -115,6 +116,9 @@ include("events.jl")
 
 export OscillatorPopulationError
 include("exceptions.jl")
+
+export save_data, load_data, save_figure
+include("input_output.jl")
 
 export rsquared, cmean, cstd, window_xcorr, cxcorr, estimate_phase_array,
     estimate_phase_array_peaks, estimate_phase_array_cxcorr,

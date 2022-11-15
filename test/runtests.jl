@@ -4,8 +4,8 @@ using OscillatorPopulation
 using StatsBase
 using Test
 
-@testset "data" begin
-    include("data_test.jl")
+@testset "biolum_data" begin
+    include("biolum_data_test.jl")
 end
 
 @testset "dummy_model" begin
@@ -18,6 +18,10 @@ end
 
 @testset "exceptions" begin
     include("exceptions_test.jl")
+end
+
+@testset "input_output" begin
+    include("input_output_test.jl")
 end
 
 @testset "metrics" begin
