@@ -20,7 +20,7 @@ installation, see the [installation guide for the PyPlot.jl package](https://git
 
 ## List of implemented methods
 
-The complete list of exported functins can be obtain from Julia REPL by calling 
+The complete list of exported functions can be obtain from Julia REPL by calling 
 ```julia
 using OscillatorPopulation
 ?OscillatorPopulation
