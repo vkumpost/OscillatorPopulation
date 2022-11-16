@@ -121,7 +121,7 @@ include("input_output.jl")
 export rsquared, cmean, cstd, window_xcorr, cxcorr, estimate_phase_array,
     estimate_phase_array_peaks, estimate_phase_array_cxcorr,
     estimate_order_parameter, estimate_period, estimate_winding_number,
-    estimate_period_winding_number, create_simulation_function
+    estimate_period_winding_number
 include("metrics.jl")
 
 export smooth, generate_random_values, benchmark, find_closest
@@ -145,5 +145,8 @@ include("population_solution.jl")
 
 export scan, scan_arnold, plot_arnold, select_arnold_row, estimate_prc, estimate_T_prc
 include("scan.jl")
+
+export create_simulation_function
+include("simulation_function.jl")
 
 end  # module

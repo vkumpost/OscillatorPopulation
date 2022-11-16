@@ -51,3 +51,7 @@ end
 @testset "scan" begin
     include("scan_test.jl")
 end
+
+@testset "simulation_function" begin
+    include("simulation_function_test.jl")
+end
