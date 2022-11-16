@@ -135,9 +135,12 @@ export set_initial_conditions!, set_timespan!, set_output!, set_solver!,
     simulate_model
 include("model.jl")
 
-export estimate_initial_conditions, create_data_objective,
-    create_entrainable_oscillator_objective, create_desynchronization_objective,
-    optimize, damped_sine, polynomial, fit_curve, binary_search
+export create_data_objective, create_entrainable_oscillator_objective,
+    create_desynchronization_objective
+include("optimization_objectives.jl")
+
+export estimate_initial_conditions, optimize, damped_sine, polynomial,
+    fit_curve, binary_search
 include("optimization.jl")
 
 export simulate_population, plot_solution, select_time, select_subset
