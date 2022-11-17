@@ -40,7 +40,7 @@ end
     include("model_test.jl")
 end
 
-@testset "optimization_objectives_test" begin
+@testset "optimization_objectives" begin
     include("optimization_objectives_test.jl")
 end
 
