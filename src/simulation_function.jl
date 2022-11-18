@@ -148,7 +148,7 @@ Generate a function that simulates a model population and apply metrics to the
 
 **Keyword Arguments**
 - `transient`: The proportion of the solution to be discrated to avoid transient
-    effects (default 0.9).
+    effects (default 0.5).
 - `trajectories`: Number of trajectories in the population (default 1).
 - `cycle_samples`: The number of samples within one cycle (default 10).
 - `smooth_span`: Smooth the time series using running average of length
@@ -173,7 +173,7 @@ Generate a function that simulates a model population and apply metrics to the
     an array of metrics calculated from the numerical solution. If `Model` is
     not passed, the function returns the metric names as an array of strings.
 """
-function create_simulation_function(property_names=nothing; transient=0.9,
+function create_simulation_function(property_names=nothing; transient=0.5,
     trajectories=1, cycle_samples=10, smooth_span=1, variable_x=1, variable_y=2,
     single_cells=false, subpopulations=Int64[], average_subpopulations=true,
     show_plots=false, kwargs...)
