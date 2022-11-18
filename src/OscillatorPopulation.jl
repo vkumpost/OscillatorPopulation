@@ -91,7 +91,6 @@ using DataFrames
 using DelimitedFiles
 using DifferentialEquations
 using Distributions
-using FFTW
 using PyPlot
 using Random
 using Statistics
