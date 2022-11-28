@@ -18,6 +18,10 @@ Pkg.test("OscillatorPopulation")
 If the compilation fails due to `PyCall` package not being able to find a Python
 installation, see the [installation guide for the PyPlot.jl package](https://github.com/JuliaPy/PyPlot.jl#installation).
 
+## Usage
+
+See [examples](examples/).
+
 ## List of implemented methods
 
 The complete list of exported functions can be obtain from Julia REPL by calling 
