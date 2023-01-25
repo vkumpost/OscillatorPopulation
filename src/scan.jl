@@ -736,3 +736,82 @@ function estimate_T_prc(model, T_cycles; trajectories=1, input_parameter="I",
     return df
 
 end
+
+
+"""
+`estimate_jet_lag`
+
+Estimate phase response on a jet-lag-like phase reversal.
+
+**Arguments**
+- `model`: Model.
+
+**Keyword Arguments**
+- `trajectories`: Number of trajectories in the population.
+- `input_parameter`: Name of the parameter on which is the input signal acting.
+- `offset_days`: Number of days before the start of the experiment to let the oscillator entrain.
+- `pre_days`: Number of days to record before the jet lag.
+- `post_days`: Number of days to record after the jet lag.
+- `show_plots`: If `true`, show plots visualizing the PRC estimation.
+
+**Returns**
+- `phases`: Vector of recorded phases centered by the default phase of entrainment.
+- `days`: Time vector for the phases. Negative days indicate days before the jet lag and positive days indicate days after the jet lag.
+"""
+function estimate_jet_lag(model::Model; trajectories=1, input_parameter="I", offset_days=20, pre_days=5, post_days=20, show_plots=false)
+    
+    # Protect the original model from overwritting
+    model = deepcopy(model)
+
+    # Create jet lag events
+    events = create_events([
+        (:LD, offset_days + pre_days, 0.5, 0.5),  # day-night cycle before jet lag
+        (:LD, 1, 1, 0.5),  # jet lag
+        (:LD, post_days + 1, 0.5, 0.5),  # day-night cycle after jet lag
+    ])
+
+    # Set the timespan and input signal of the model
+    time_end = events[end, 2] + 0.5
+    set_timespan!(model, time_end)
+    set_input!(model, events, input_parameter)
+
+    # Simulate the model
+    solution = simulate_population(model, trajectories; show_progress=true)
+
+    # Extract the phase for the days before the jet lag
+    events_pre = solution.events[offset_days:(offset_days + pre_days + 1), :]
+    idx = events_pre[1, 1] .<= solution.time .<= events_pre[end, 2] + 0.5
+    t_pre = solution.time[idx]
+    x_pre = solution.mean[idx, 1]
+    phase_array_pre = estimate_phase_array(t_pre, x_pre, events_pre)
+    entrainment_phase = cmean(phase_array_pre)
+    phase_array_pre .-= entrainment_phase
+
+    # Extract the phase for the days after the jet lag
+    events_post = solution.events[(offset_days + pre_days + 1):end, :]
+    idx = events_post[1, 1] .<= solution.time .<= events_post[end, 2] + 0.5
+    t_post = solution.time[idx]
+    x_post = solution.mean[idx, 1]
+    phase_array_post = estimate_phase_array(t_post, x_post, events_post)
+    phase_array_post .-= entrainment_phase
+
+    # Create the output arrays of phases and days (time vector)
+    days = Vector(-pre_days:post_days)
+    phases = vcat(phase_array_pre, [NaN], phase_array_post)
+
+    # Plot the results (simulated time series and estimated phase)
+    if show_plots
+        fig, ax = subplots()
+        plot_solution(solution, ax=ax)
+        ax.plot(t_pre, x_pre)
+        ax.plot(t_post, x_post)
+
+        fig, ax = subplots()
+        ax.plot([days[1] - 0.5, days[end] + 0.5], [0, 0], "k--")
+        ax.plot([days[pre_days + 1], days[pre_days + 1]], [minimum(phases[.!isnan.(phases)]) - 0.1, maximum(.!isnan.(phases)) + 0.1], "k--")
+        ax.plot(days, phases, "ko")
+    end
+
+    return phases, days
+
+end
