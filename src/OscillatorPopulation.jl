@@ -84,7 +84,7 @@ Package for simulation of populations of deterministic and stochastic oscillator
 - `select_arnold_row`: Select a specific row from the output of `scan_arnold`.
 - `estimate_prc`: Estimate phase response curve.
 - `estimate_T_prc`: Estimate T-cycle phase response curve.
-- `estimate_jet_lag`: Estimate phase response on a jet-lag-like phase reversal. 
+- `estimate_jet_lag`: Estimate phase response on a jet-lag-like phase reversal.
 """
 module OscillatorPopulation
 
