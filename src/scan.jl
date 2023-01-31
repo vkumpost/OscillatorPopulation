@@ -752,13 +752,14 @@ Estimate phase response on a jet-lag-like phase reversal.
 - `offset_days`: Number of days before the start of the experiment to let the oscillator entrain.
 - `pre_days`: Number of days to record before the jet lag.
 - `post_days`: Number of days to record after the jet lag.
+- `phase_estimator`: Select phase estimator for `estimate_phase_array`.
 - `show_plots`: If `true`, show plots visualizing the PRC estimation.
 
 **Returns**
 - `phases`: Vector of recorded phases centered by the default phase of entrainment.
 - `days`: Time vector for the phases. Negative days indicate days before the jet lag and positive days indicate days after the jet lag.
 """
-function estimate_jet_lag(model::Model; trajectories=1, input_parameter="I", offset_days=20, pre_days=5, post_days=20, show_plots=false)
+function estimate_jet_lag(model::Model; trajectories=1, input_parameter="I", offset_days=20, pre_days=5, post_days=20, phase_estimator="peak_height", show_plots=false)
     
     # Protect the original model from overwritting
     model = deepcopy(model)
@@ -783,7 +784,7 @@ function estimate_jet_lag(model::Model; trajectories=1, input_parameter="I", off
     idx = events_pre[1, 1] .<= solution.time .<= events_pre[end, 2] + 0.5
     t_pre = solution.time[idx]
     x_pre = solution.mean[idx, 1]
-    phase_array_pre = estimate_phase_array(t_pre, x_pre, events_pre)
+    phase_array_pre = estimate_phase_array(t_pre, x_pre, events_pre, method=phase_estimator)
     entrainment_phase = cmean(phase_array_pre)
     phase_array_pre .-= entrainment_phase
 
@@ -792,7 +793,7 @@ function estimate_jet_lag(model::Model; trajectories=1, input_parameter="I", off
     idx = events_post[1, 1] .<= solution.time .<= events_post[end, 2] + 0.5
     t_post = solution.time[idx]
     x_post = solution.mean[idx, 1]
-    phase_array_post = estimate_phase_array(t_post, x_post, events_post)
+    phase_array_post = estimate_phase_array(t_post, x_post, events_post, method=phase_estimator)
     phase_array_post .-= entrainment_phase
 
     # Create the output arrays of phases and days (time vector)
