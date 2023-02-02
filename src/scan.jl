@@ -468,6 +468,7 @@ Estimate the phase response curve.
     the phase shift.
 - `input_parameter`: Name of the parameter on which is the input signal acting.
 - `pulse_length`: Length of the input pulse.
+- `minprominence`: Minimal prominence threshold to detect a peak.
 - `show_progress`: If `true`, show a progress bar in the terminal.
 - `show_plots`: If `true`, show plots visualizing the PRC estimation.
 
@@ -480,7 +481,7 @@ Estimate the phase response curve.
 """
 function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=10,
     pacing_length=10, offset=3, response_length=3, input_parameter="I",
-    pulse_length=nothing, show_progress=false, show_plots=false)
+    pulse_length=nothing, minprominence=0.1, show_progress=false, show_plots=false)
 
     # Copy model so the original is not modified
     model_prc = deepcopy(model)
@@ -525,7 +526,7 @@ function estimate_prc(model; trajectories=1, n_pulses=10, frp=1, pacing_offset=1
     x = solution.mean[:, 1]
     pr = findpeaks(x, t, sortstr="descend", sortref="prominence", npeaks=1)
     ref_prom = peakprominences(pr)[1]
-    pr = findpeaks(x, t, minprominence=0.1ref_prom)
+    pr = findpeaks(x, t, minprominence=minprominence * ref_prom)
     pks = peakheights(pr)
     locs = peaklocations(pr)
     if show_plots
