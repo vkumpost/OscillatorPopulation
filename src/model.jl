@@ -476,7 +476,7 @@ function print_info(model::Model)
         end
     end
 
-    println("Initial condions")
+    println("Initial conditions")
     for (index, variable) in enumerate(model.variable_names)
         println("  $variable = $(prob.u0[index])")
     end
