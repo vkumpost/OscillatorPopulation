@@ -349,8 +349,13 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
     # Prepare axes - x-axis: input period, y-axis: input amplitude
     n_x_values = length(unique(df[:, x_axis_name]))
     n_y_values = length(unique(df[:, y_axis_name]))
-    x_values_matrix = Matrix(transpose(reshape(df[:, x_axis_name], n_x_values, n_y_values)))
-    y_values_matrix = Matrix(transpose(reshape(df[:, y_axis_name], n_x_values, n_y_values)))
+    if type in ["tongue", "duty_cycle_tongue"]
+        x_values_matrix = Matrix(transpose(reshape(df[:, x_axis_name], n_x_values, n_y_values)))
+        y_values_matrix = Matrix(transpose(reshape(df[:, y_axis_name], n_x_values, n_y_values)))
+    else
+        x_values_matrix = Matrix(reshape(df[:, x_axis_name], n_y_values, n_x_values))
+        y_values_matrix = Matrix(reshape(df[:, y_axis_name], n_y_values, n_x_values))
+    end
 
     # Estimate which points are entrained
     if !isnothing(error_name)
@@ -367,7 +372,11 @@ function plot_arnold(df::DataFrame, type="tongue"; property_name=nothing, error_
         Z[idx] .= 0
         h = ax.pcolor(x_values_matrix, y_values_matrix, Z, rasterized=true, cmap=colormap)
     else
-        Z = Matrix(transpose(reshape(df[:, property_name], n_x_values, n_y_values)))
+        if type in ["tongue", "duty_cycle_tongue"]
+            Z = Matrix(transpose(reshape(df[:, property_name], n_x_values, n_y_values)))
+        else
+            Z = Matrix(reshape(df[:, property_name], n_y_values, n_x_values))
+        end
         Z[.!idx] .= NaN
         h = ax.pcolor(x_values_matrix, y_values_matrix, Z, rasterized=true, cmap=colormap)
     end
